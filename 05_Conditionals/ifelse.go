@@ -37,4 +37,16 @@ func main() {
 	// }
 
 	// go does not have ternary, you will have to use normal if else.
+
+	var i int = 0;
+	for i <= 10 {
+		if i == 4 {
+			fmt.Println("4 is found")
+			break
+		}
+		// fmt.Println("run", i)
+		i = i + 1
+	}
+
+	
 }
