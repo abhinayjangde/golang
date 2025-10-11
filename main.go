@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func main() {
 	// const PI = 3.14
 	// PI = 21
