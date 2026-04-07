@@ -5,6 +5,7 @@ import (
 
 	"github.com/abhinayjangde/prod/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -31,4 +32,47 @@ func GetAll() ([]Todo, error) {
 	}
 
 	return todos, nil
+}
+
+func GetById(id string) (Todo, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return Todo{}, err
+	}
+
+	var todo Todo
+	err = getCollection().FindOne(context.Background(), bson.M{"_id": objID}).Decode(&todo)
+	if err != nil {
+		return Todo{}, err
+	}
+
+	return todo, nil
+}
+
+func UpdateTodo(id string, update Todo) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	updateDoc := bson.M{
+		"$set": bson.M{
+			"title": update.Title,
+			"done":  update.Done,
+		},
+	}
+	_, err = getCollection().UpdateOne(context.Background(), bson.M{"_id": objID}, updateDoc)
+	return err
+
+}
+
+func DeleteTodo(id string) error {
+	collection := getCollection()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	return err
 }
