@@ -1,24 +1,30 @@
 package main
 
+import (
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+)
+
 func main() {
-	// const PI = 3.14
-	// PI = 21
-	// age := 22
-	// fmt.Println("Hello World!", age)
-	// fmt.Println("value of pi is ", PI)
+	resp, err := http.Get("https://jsonplaceholder.typicode.com/todos/1")
+	if err != nil {
+		log.Fatalf("Failed to fetch URL: %v", err)
+	}
 
-	// var (
-	// 	name string = "Abhi"
-	// 	age int = 22
-	// 	email string = "abhi@gmail.com"
-	// )
-	// fmt.Println(name,email,age)
+	defer resp.Body.Close()
 
-	// fmt.Println("Namaste")
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("Non-OK HTTP status: %d", resp.StatusCode)
+	}
 
-	// arrays
-	// var nums [4]int
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body: %v", err)
+	}
 
-	// ages := [3]int{12, 3, 23}
-	// fmt.Println(ages[2])
+	bodyString := string(bodyBytes)
+	fmt.Println(bodyString)
+
 }
