@@ -14,12 +14,13 @@ func worker(id int, wg *sync.WaitGroup) {
 }
 
 func main() {
-	var wg sync.WaitGroup
+	ch := make(chan int)
 
-	for i := 1; i <= 5; i++ {
-		wg.Add(1)
-		go worker(i, &wg)
-	}
+	go func() {
 
-	wg.Wait()
+		ch <- 5
+	}()
+	res := <-ch
+
+	fmt.Print(res)
 }
