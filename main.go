@@ -2,29 +2,24 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"net/http"
+	"sync"
+	"time"
 )
 
+func worker(id int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Println("worker", id, "started")
+	time.Sleep(time.Second)
+	fmt.Println("worker", id, "done")
+}
+
 func main() {
-	resp, err := http.Get("https://jsonplaceholder.typicode.com/todos/1")
-	if err != nil {
-		log.Fatalf("Failed to fetch URL: %v", err)
+	var wg sync.WaitGroup
+
+	for i := 1; i <= 5; i++ {
+		wg.Add(1)
+		go worker(i, &wg)
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Non-OK HTTP status: %d", resp.StatusCode)
-	}
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Failed to read response body: %v", err)
-	}
-
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
-
+	wg.Wait()
 }
