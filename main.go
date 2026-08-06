@@ -13,14 +13,18 @@ func worker(id int, wg *sync.WaitGroup) {
 	fmt.Println("worker", id, "done")
 }
 
+func nums(ch chan<- int) {
+	for i := range 5 {
+		ch <- i
+	}
+	close(ch)
+}
+
 func main() {
-	ch := make(chan int)
+	ch := make(chan int, 5)
 
-	go func() {
-
-		ch <- 5
-	}()
-	res := <-ch
-
-	fmt.Print(res)
+	nums(ch)
+	for n := range ch {
+		fmt.Println(n)
+	}
 }
