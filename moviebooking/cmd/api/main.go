@@ -17,5 +17,15 @@ func main() {
 		})
 	})
 
+	router.POST("/api/products/:id/:price", func(c *gin.Context) {
+		id := c.Param("id")
+		price := c.Param("price")
+
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "user created",
+			"id":      id,
+			"price":   price,
+		})
+	})
 	router.Run(":8080")
 }
