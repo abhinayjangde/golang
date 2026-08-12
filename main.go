@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+func print10(n int) int {
+	if n == 11 {
+		return 0
+	}
+	fmt.Println(n)
+	return print10(n + 1)
+}
 func worker(id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	fmt.Println("worker", id, "started")
@@ -21,10 +28,12 @@ func nums(ch chan<- int) {
 }
 
 func main() {
-	ch := make(chan int, 5)
+	// ch := make(chan int, 5)
 
-	nums(ch)
-	for n := range ch {
-		fmt.Println(n)
-	}
+	// nums(ch)
+	// for n := range ch {
+	// 	fmt.Println(n)
+	// }
+
+	print10(1)
 }
