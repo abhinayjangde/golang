@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/config"
+	"github.com/abhinayjangde/olxapi/internal/handlers"
 )
 
 func main() {
@@ -14,12 +15,7 @@ func main() {
 
 	log.Printf("starting server on port %s", cfg.Port)
 
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("content-type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		w.Write([]byte(`{"status":"okay"}`))
-	})
+	mux.HandleFunc("GET /healthz", handlers.Healthz)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
