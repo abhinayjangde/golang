@@ -21,7 +21,7 @@ func main() {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	srv := http.Server{
+	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      mux,
 		ReadTimeout:  time.Second * 10,
