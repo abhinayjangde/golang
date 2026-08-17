@@ -28,12 +28,12 @@ func nums(ch chan<- int) {
 }
 
 func main() {
-	// ch := make(chan int, 5)
+	ch := make(chan int, 5)
 
-	// nums(ch)
-	// for n := range ch {
-	// 	fmt.Println(n)
-	// }
+	nums(ch)
+	for n := range ch {
+		fmt.Println(n)
+	}
 
 	print10(1)
 }
