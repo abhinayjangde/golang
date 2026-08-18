@@ -1,4 +1,4 @@
-CREATE TABLE listing (
+CREATE TABLE IF NOT EXISTS listing (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     description TEXT,
