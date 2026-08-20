@@ -32,7 +32,7 @@ func main() {
 	case "down":
 		log.Println("Running migrations down...")
 		// Add your rollback logic here
-		if err := m.Down(); err != nil {
+		if err := m.Steps(-1); err != nil {
 			log.Fatalf("migrate.down: %v", err)
 		}
 	default:
