@@ -3,9 +3,16 @@ package main
 import "fmt"
 
 func main() {
-	slice := []int{1, 2, 3}
-	// fmt.Println(slice)
-	slice = append(slice, 4, 5)
-	fmt.Println(slice)
+	user := make(map[string]any)
+
+	user["name"] = "abhi"
+	user["age"] = 24
+	user["email"] = "abhi@gmail.com"
+
+	fmt.Println(user)
+
+	delete(user, "age")
+
+	fmt.Println(user)
 
 }
