@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 )
 
-func main() {
+func main3() {
 
 	http.HandleFunc("/users", userHandler)
 
