@@ -2,17 +2,22 @@ package main
 
 import "fmt"
 
+func greet() string {
+	// msg = "hello"
+	return "hello ji"
+}
+
+func add(nums ...int) int {
+	total := 0
+	for _, n := range nums {
+		total += n
+	}
+	return total
+}
+
+func print(values ...any) {
+	fmt.Println(values...)
+}
 func main() {
-	user := make(map[string]any)
-
-	user["name"] = "abhi"
-	user["age"] = 24
-	user["email"] = "abhi@gmail.com"
-
-	fmt.Println(user)
-
-	delete(user, "age")
-
-	fmt.Println(user)
 
 }
