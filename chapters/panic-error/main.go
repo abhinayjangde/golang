@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
+	"runtime/debug"
 )
 
 func main() {
@@ -17,14 +19,21 @@ func main() {
 }
 
 func userHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Recover from panic and log the error
+	defer func() {
+		rec := recover()
+		if rec != nil {
+			slog.Error("panic recovered", "err", rec, "stack", string(debug.Stack()), "path", r.URL.Path)
+
+			http.Error(w, "User not found", http.StatusNotFound)
+		}
+	}()
+
 	id := r.URL.Query().Get("id")
 
 	u := getUser(id)
 
-	// if u == nil {
-	// 	http.Error(w, "User not found", http.StatusNotFound)
-	// 	return
-	// }
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(u.Name + "\n"))
 }
