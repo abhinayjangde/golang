@@ -2,22 +2,15 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"os"
 )
 
-type User struct {
-	Name  string
-	Email string
-}
-
-func (u *User) getEmail() string {
-	return u.Email
-}
 func main() {
 
-	uname := "abhinay jangde"
-	fmt.Println(strings.Split(uname, " "))
-	for item := range strings.SplitSeq(uname, " ") {
-		fmt.Println(item)
+	data, err := os.ReadFile("README.md")
+	if err != nil {
+		panic(err)
 	}
+	fmt.Println(string(data))
+
 }
