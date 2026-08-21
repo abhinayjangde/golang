@@ -1,11 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 )
 
 func main() {
-	err := errors.New("my error")
-	fmt.Println(err)
+	var input string
+	fmt.Scanln(&input)
+	fmt.Println("your input is ", input)
+
 }
