@@ -18,6 +18,18 @@ func add(nums ...int) int {
 func print(values ...any) {
 	fmt.Println(values...)
 }
-func main() {
 
+func main() {
+	add := func(x, y int) int {
+		return x + y
+	}
+	x := 0
+	increment := func() int {
+		x++
+		return x
+	}
+	print(add(1, 2))
+	print(increment())
+	print(increment())
+	print(increment())
 }
