@@ -1,17 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
+type User struct {
+	Name  string
+	Email string
+}
+
+func (u *User) getEmail() string {
+	return u.Email
+}
 func main() {
-	type User struct {
-		Name  string
-		Email string
-	}
 
-	user := User{
-		Name:  "John Doe",
-		Email: "john@gmail.com",
+	uname := "abhinay jangde"
+	fmt.Println(strings.Split(uname, " "))
+	for item := range strings.SplitSeq(uname, " ") {
+		fmt.Println(item)
 	}
-
-	fmt.Println(user.Name)
 }
