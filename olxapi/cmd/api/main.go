@@ -23,7 +23,7 @@ func main() {
 
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
 
-	srv := &http.Server{
+	srv := http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      mux,
 		ReadTimeout:  time.Second * 10,
