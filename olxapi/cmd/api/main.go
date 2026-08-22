@@ -22,6 +22,7 @@ func main() {
 	log.Printf("starting server on port %s", cfg.Port)
 
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
+	mux.HandleFunc("GET /listings", handlers.List)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
