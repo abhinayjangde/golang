@@ -8,7 +8,7 @@ import (
 	"github.com/abhinayjangde/olxapi/internal/config"
 	"github.com/abhinayjangde/olxapi/internal/db"
 	"github.com/abhinayjangde/olxapi/internal/handlers"
-	"github.com/abhinayjangde/olxapi/internal/middlewares"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -18,7 +18,16 @@ func main() {
 		log.Fatalf("main.db.connect: %v", err)
 	}
 	mux := http.NewServeMux()
-	wrappedMux := middlewares.CorsMiddleware(mux) // for fixing cors policy
+	// wrappedMux := middlewares.CorsMiddleware(mux) // for fixing cors policy
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://127.0.0.1:5500"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+		Debug:            false, // Set to true to print debugging info to stderr
+	})
+
+	wrappedMux := c.Handler(mux)
 
 	log.Println("database connected")
 	log.Printf("starting server on port %s", cfg.Port)
