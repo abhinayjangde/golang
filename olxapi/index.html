@@ -6,16 +6,15 @@
     <title>Document</title>
 </head>
 <body>
-    <p id="hello"></p>
+    <p id="status"> status: fetching</p>
 
     <script>
-        async function greet(){
+        async function health(){
             const res = await fetch("http://localhost:8080/healthz")
             const data = await res.json()
-            console.log(data)
+            document.getElementById("status").textContent = `status: ${data.status}`
         }
-
-        greet()
+        health()
     </script>
 </body>
 </html>
