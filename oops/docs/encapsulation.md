@@ -1,3 +1,4 @@
+```go
 package main
 
 import "fmt"
@@ -36,3 +37,5 @@ func main() {
 	abhi.deposit(200)
 	abhi.getBalance()
 }
+
+```
