@@ -17,8 +17,6 @@ func Redis(redistUrl string) (*redis.Client, error) {
 	}
 	client := redis.NewClient(opt)
 
-	defer client.Close()
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 

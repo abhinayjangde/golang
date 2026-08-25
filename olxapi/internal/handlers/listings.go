@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -21,6 +22,15 @@ type listing struct {
 
 func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var ctx = context.Background()
+		// check if listings are cached in redis
+		redisListings, err := redis.Get(ctx, "listings").Result()
+		if err == nil {
+			w.Header().Set("content-type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(redisListings)
+			return
+		}
 
 		rows, err := db.Query(`SELECT id, title, description, price, city, created_at
 			FROM listings
@@ -52,6 +62,19 @@ func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 			return
 		}
 
+		// caching the listings in redis for 10 seconds
+		jsonListings, err := json.Marshal(listings)
+		if err != nil {
+			log.Printf("json.Marshal: %v", err)
+			http.Error(w, "error while serializing listings", http.StatusInternalServerError)
+			return
+		}
+		err = redis.Set(ctx, "listings", jsonListings, time.Second*10).Err()
+		if err != nil {
+			log.Printf("redis.set: %v", err)
+			http.Error(w, "error while saving listings to cache", http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
