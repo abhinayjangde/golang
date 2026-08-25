@@ -13,10 +13,12 @@ import (
 
 func main() {
 	cfg := config.MustLoad()
-	redis, err := db.Redis(cfg.RedisUrl)
+	redis, err := db.NewRedisClient(cfg.RedisUrl)
 	if err != nil {
 		log.Fatalf("main.db.redis: %v", err)
 	}
+	defer redis.Close()
+
 	db, err := db.Connect(cfg.DatabaseUrl)
 	if err != nil {
 		log.Fatalf("main.db.connect: %v", err)
@@ -33,7 +35,8 @@ func main() {
 
 	wrappedMux := c.Handler(mux)
 
-	log.Println("database connected")
+	log.Println("redis is ready to use!")
+	log.Println("postgres database connected")
 	log.Printf("starting server on port %s", cfg.Port)
 
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
