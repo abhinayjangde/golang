@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/abhinayjangde/olxapi/internal/helpers"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -24,15 +25,6 @@ const (
 	cacheTTL         = 10 * time.Second
 )
 
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("json.Encode: %v", err)
-	}
-}
-
 func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -45,7 +37,7 @@ func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 				http.Error(w, "error while deserializing cached listings", http.StatusInternalServerError)
 				return
 			}
-			writeJSON(w, http.StatusOK, listings)
+			helpers.WriteJSON(w, http.StatusOK, listings)
 			return
 		}
 
@@ -92,6 +84,6 @@ func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 			http.Error(w, "error while saving listings to cache", http.StatusInternalServerError)
 			return
 		}
-		writeJSON(w, http.StatusOK, listings)
+		helpers.WriteJSON(w, http.StatusOK, listings)
 	}
 }
