@@ -39,6 +39,7 @@ func main() {
 	log.Println("postgres database connected")
 	log.Printf("starting server on port %s", cfg.Port)
 
+	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
 	mux.HandleFunc("GET /listings", handlers.List(db, redis))
 
