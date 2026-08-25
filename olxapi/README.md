@@ -39,5 +39,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin
 ---
 
 cors package
-
 go get github.com/rs/cors
+
+redis db
+go get github.com/redis/go-redis/v9

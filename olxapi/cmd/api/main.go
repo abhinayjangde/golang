@@ -13,6 +13,10 @@ import (
 
 func main() {
 	cfg := config.MustLoad()
+	redis, err := db.Redis(cfg.RedisUrl)
+	if err != nil {
+		log.Fatalf("main.db.redis: %v", err)
+	}
 	db, err := db.Connect(cfg.DatabaseUrl)
 	if err != nil {
 		log.Fatalf("main.db.connect: %v", err)
@@ -33,7 +37,7 @@ func main() {
 	log.Printf("starting server on port %s", cfg.Port)
 
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
-	mux.HandleFunc("GET /listings", handlers.List(db))
+	mux.HandleFunc("GET /listings", handlers.List(db, redis))
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,

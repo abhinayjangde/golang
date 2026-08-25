@@ -10,6 +10,7 @@ type Config struct {
 	Port        string `env:"PORT" envDefault:"8000"`
 	Env         string `env:"ENV" envDefault:"local"`
 	DatabaseUrl string `env:"DATABASE_URL"`
+	RedisUrl    string `env:"REDIS_URL"`
 }
 
 func MustLoad() Config {
@@ -28,9 +29,15 @@ func MustLoad() Config {
 	if databaseUrl == "" {
 		panic("DATABASE_URL environment variable is not set")
 	}
+
+	redisUrl := os.Getenv("REDIS_URL")
+	if redisUrl == "" {
+		panic("REDIS_URL environment variable is not set")
+	}
 	return Config{
 		Port:        port,
 		Env:         env,
 		DatabaseUrl: databaseUrl,
+		RedisUrl:    redisUrl,
 	}
 }

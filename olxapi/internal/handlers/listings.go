@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type listing struct {
@@ -17,8 +19,7 @@ type listing struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-func List(db *sql.DB) http.HandlerFunc {
-
+func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		rows, err := db.Query(`SELECT id, title, description, price, city, created_at
