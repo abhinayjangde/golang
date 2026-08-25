@@ -33,15 +33,17 @@ func main() {
 		Debug:            false, // Set to true to print debugging info to stderr
 	})
 
-	wrappedMux := c.Handler(mux)
-
 	log.Println("redis is ready to use!")
 	log.Println("postgres database connected")
 	log.Printf("starting server on port %s", cfg.Port)
 
+	lh := handlers.NewListingHandler(db, redis) // listing handler
+
+	wrappedMux := c.Handler(mux)
 	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
-	mux.HandleFunc("GET /listings", handlers.List(db, redis))
+	mux.HandleFunc("GET /listings", lh.List)
+	mux.HandleFunc("DELETE /listings/{id}", lh.Delete)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
