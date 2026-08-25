@@ -26,9 +26,15 @@ func List(db *sql.DB, redis *redis.Client) http.HandlerFunc {
 		// check if listings are cached in redis
 		redisListings, err := redis.Get(ctx, "listings").Result()
 		if err == nil {
+			var listings []listing
+			if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
+				log.Printf("json.Unmarshal cached listings: %v", err)
+				http.Error(w, "error while deserializing cached listings", http.StatusInternalServerError)
+				return
+			}
 			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			_ = json.NewEncoder(w).Encode(redisListings)
+			_ = json.NewEncoder(w).Encode(listings)
 			return
 		}
 
