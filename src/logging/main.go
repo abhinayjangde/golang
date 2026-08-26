@@ -1,24 +1,50 @@
 package main
 
 import (
-	"log"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Hello endpoint was called")
+type User struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
 
-	w.Write([]byte("Hello, World!"))
+func getUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := 10
+
+	slog.Info(
+		"Fetching user",
+		"user_id", userID,
+	)
+
+	user := User{
+		ID:   userID,
+		Name: "Abhi",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(user)
+
+	slog.Info(
+		"User fetched successfully",
+		"user_id", user.ID,
+	)
 }
 
 func main() {
-	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("GET /users", getUserHandler)
 
-	log.Println("Server starting on port 8080")
+	slog.Info("Server started", "port", 8080)
 
 	err := http.ListenAndServe(":8080", nil)
 
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(
+			"Server failed to start",
+			"error", err,
+		)
 	}
 }
