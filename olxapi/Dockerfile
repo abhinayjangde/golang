@@ -17,6 +17,8 @@ WORKDIR /app
 
 COPY --from=builder /app/main .
 
+RUN mkdir -p /var/log/olxapi && chown -R gouser:gouser /var/log/olxapi
+
 USER gouser
 
 EXPOSE 8080

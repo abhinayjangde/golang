@@ -7,6 +7,10 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    environment:
+      LOG_FILE: /var/log/olxapi/api.jsonl
+    volumes:
+      - api_logs:/var/log/olxapi
       
   postgres:
     image: postgres:latest
@@ -21,3 +25,4 @@ services:
     restart: unless-stopped
 volumes:
   postgres_data:
+  api_logs:

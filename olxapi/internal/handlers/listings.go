@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -50,6 +51,11 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		}
 		helpers.WriteJSON(w, http.StatusOK, listings)
 		return
+	} else if err != redis.Nil {
+		slog.WarnContext(ctx, "redis cache unavailable",
+			"operation", "listings.list",
+			"err", err,
+		)
 	}
 
 	rows, err := lh.db.QueryContext(ctx,
@@ -60,7 +66,10 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Printf("db.query: %v", err)
+		slog.ErrorContext(ctx, "database query failed",
+			"operation", "listings.list",
+			"err", err,
+		)
 		http.Error(w, "error while fetching listings", http.StatusInternalServerError)
 		return
 	}
@@ -111,6 +120,10 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
+	slog.InfoContext(ctx, "listing deleted",
+		"operation", "listings.delete",
+		"listing_id", id,
+	)
 
 	helpers.WriteJSON(w, http.StatusNoContent, nil)
 }
