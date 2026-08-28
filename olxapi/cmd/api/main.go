@@ -1,27 +1,42 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/config"
 	"github.com/abhinayjangde/olxapi/internal/db"
 	"github.com/abhinayjangde/olxapi/internal/handlers"
+	"github.com/abhinayjangde/olxapi/internal/logging"
 	"github.com/rs/cors"
 )
 
 func main() {
+	// loading env config
 	cfg := config.MustLoad()
+
+	// logger setup
+	logger, closer, err := logging.New(cfg.LogFile)
+	if err != nil {
+		slog.Error("logger initialization failed", "err", err)
+		os.Exit(1)
+	}
+	defer closer.Close()
+	slog.SetDefault(logger)
+
 	redis, err := db.NewRedisClient(cfg.RedisUrl)
 	if err != nil {
-		log.Fatalf("main.db.redis: %v", err)
+		logger.Error("redis initialization failed", "err", err)
+		os.Exit(1)
 	}
 	defer redis.Close()
 
 	db, err := db.Connect(cfg.DatabaseUrl)
 	if err != nil {
-		log.Fatalf("main.db.connect: %v", err)
+		logger.Error("database connection failed", "err", err)
+		os.Exit(1)
 	}
 	mux := http.NewServeMux()
 	// wrappedMux := middlewares.CorsMiddleware(mux) // for fixing cors policy
@@ -33,9 +48,9 @@ func main() {
 		Debug:            false, // Set to true to print debugging info to stderr
 	})
 
-	log.Println("redis is ready to use!")
-	log.Println("postgres database connected")
-	log.Printf("starting server on port %s", cfg.Port)
+	logger.Info("redis ready")
+	logger.Info("postgres database connected")
+	logger.Info("starting server", "port", cfg.Port)
 
 	lh := handlers.NewListingHandler(db, redis) // listing handler
 
@@ -53,6 +68,7 @@ func main() {
 		IdleTimeout:  time.Second * 60,
 	}
 	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalf("error while starting server %v", err)
+		logger.Error("server stopped", "err", err)
+		os.Exit(1)
 	}
 }

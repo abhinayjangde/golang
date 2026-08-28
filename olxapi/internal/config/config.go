@@ -11,6 +11,7 @@ type Config struct {
 	Env         string `env:"ENV" envDefault:"local"`
 	DatabaseUrl string `env:"DATABASE_URL"`
 	RedisUrl    string `env:"REDIS_URL"`
+	LogFile     string `env:"LOG_FILE" envDefault:"app.log"`
 }
 
 func MustLoad() Config {
@@ -34,10 +35,15 @@ func MustLoad() Config {
 	if redisUrl == "" {
 		panic("REDIS_URL environment variable is not set")
 	}
+	logFile := os.Getenv("LOG_FILE")
+	if logFile == "" {
+		panic("LOG_FILE environment variable is not set")
+	}
 	return Config{
 		Port:        port,
 		Env:         env,
 		DatabaseUrl: databaseUrl,
 		RedisUrl:    redisUrl,
+		LogFile:     logFile,
 	}
 }
