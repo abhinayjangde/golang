@@ -5,3 +5,8 @@ docker-compose.yml
 Dockerfile
 bin
 dist
+.vscode
+.env.example
+index.html
+logs
+seeds

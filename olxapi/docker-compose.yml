@@ -9,8 +9,15 @@ services:
       - .env
     environment:
       LOG_FILE: /var/log/olxapi/api.jsonl
+      DATABASE_URL: postgresql://abhi:password@postgres:5432/olxapi?search_path=public&sslmode=disable
+      REDIS_URL: redis://redis:6379
     volumes:
       - api_logs:/var/log/olxapi
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       
   postgres:
     image: postgres:latest
@@ -24,11 +31,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abhi -d olxapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 volumes:
   postgres_data:
   api_logs:

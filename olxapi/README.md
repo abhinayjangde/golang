@@ -43,3 +43,6 @@ go get github.com/rs/cors
 
 redis db
 go get github.com/redis/go-redis/v9
+
+# migrate all migrations
+go run ./cmd/migrate up
