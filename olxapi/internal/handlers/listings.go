@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -45,7 +44,10 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var listings []listing
 		if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
-			log.Printf("json.Unmarshal cached listings: %v", err)
+			slog.ErrorContext(ctx, "json.Unmarshal error",
+				"operation", "listings.list",
+				"err", err,
+			)
 			http.Error(w, "error while deserializing cached listings", http.StatusInternalServerError)
 			return
 		}
@@ -81,14 +83,20 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var l listing
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
-			log.Printf("rows.Scan: %v", err)
+			slog.ErrorContext(ctx, "row scan failed",
+				"operation", "listings.list",
+				"err", err,
+			)
 			http.Error(w, "error while deserializing listing", http.StatusInternalServerError)
 			return
 		}
 		listings = append(listings, l)
 	}
 	if err := rows.Err(); err != nil {
-		log.Printf("rows.err: %v", err)
+		slog.ErrorContext(ctx, "rows error",
+			"operation", "listings.list",
+			"err", err,
+		)
 		http.Error(w, "error while reading listing", http.StatusInternalServerError)
 		return
 	}
@@ -96,16 +104,28 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	// caching the listings in redis for 10 seconds
 	jsonListings, err := json.Marshal(listings)
 	if err != nil {
-		log.Printf("json.Marshal: %v", err)
+		slog.ErrorContext(ctx, "json.Marshal error",
+			"operation", "listings.list",
+			"err", err,
+		)
 		http.Error(w, "error while serializing listings", http.StatusInternalServerError)
 		return
 	}
 	err = lh.redis.Set(ctx, listingsCacheKey, jsonListings, cacheTTL).Err()
 	if err != nil {
-		log.Printf("redis.set: %v", err)
+		slog.ErrorContext(ctx, "redis.set error",
+			"operation", "listings.list",
+			"err", err,
+		)
 		http.Error(w, "error while saving listings to cache", http.StatusInternalServerError)
 		return
 	}
+
+	slog.InfoContext(ctx, "listings fetched and cached",
+		"operation", "listings.list",
+		"count", len(listings),
+	)
+
 	helpers.WriteJSON(w, http.StatusOK, listings)
 
 }
@@ -116,7 +136,10 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 
 	_, err := lh.db.ExecContext(ctx, `DELETE FROM listings WHERE id = $1`, id)
 	if err != nil {
-		log.Printf("delete: %v", err)
+		slog.ErrorContext(ctx, "delete error",
+			"operation", "listings.delete",
+			"err", err,
+		)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
