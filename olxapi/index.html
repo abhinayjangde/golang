@@ -3,18 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>olx api</title>
 </head>
 <body>
-    <p id="status"> status: fetching</p>
+    <p id="status"> status: fetching listings</p>
 
+    <div id="renderListings">
+
+    </div>
     <script>
-        async function health(){
-            const res = await fetch("http://localhost:8080/healthz")
-            const data = await res.json()
-            document.getElementById("status").textContent = `status: ${data.status}`
+        let productListings = [];
+
+        const statusEl = document.getElementById("status");
+        const renderListingElem = document.getElementById("renderListings");
+
+        async function listings() {
+            try {
+                const res = await fetch("http://localhost:8080/listings");
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                productListings = data;
+
+                renderListingElem.innerHTML = "";
+                productListings.forEach((item) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${item.title} - ${item.city} - ₹${item.price}`;
+                    renderListingElem.appendChild(p);
+                });
+
+                statusEl.textContent = `status: fetched ${productListings.length} listings`;
+                console.log("productListings:", productListings);
+            } catch (error) {
+                statusEl.textContent = "status: error fetching listings";
+                console.error(error);
+            }
         }
-        health()
+
+        listings();
     </script>
 </body>
 </html>
