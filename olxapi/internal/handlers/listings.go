@@ -22,7 +22,7 @@ type listing struct {
 
 const (
 	listingsCacheKey = "listings"
-	cacheTTL         = 10 * time.Second
+	cacheTTL         = 20 * time.Second
 )
 
 type ListingHanlder struct {
