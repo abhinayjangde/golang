@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/helpers"
@@ -35,6 +38,77 @@ func NewListingHandler(db *sql.DB, redis *redis.Client) *ListingHanlder {
 		db:    db,
 		redis: redis,
 	}
+}
+
+func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
+	return lh.redis.Del(ctx, listingsCacheKey).Err()
+}
+
+func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var payload struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Price       int64  `json:"price"`
+		City        string `json:"city"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		slog.ErrorContext(ctx, "invalid request body",
+			"operation", "listings.add",
+			"err", err,
+		)
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	payload.Title = strings.TrimSpace(payload.Title)
+	payload.Description = strings.TrimSpace(payload.Description)
+	payload.City = strings.TrimSpace(payload.City)
+
+	if payload.Title == "" {
+		http.Error(w, "title is required", http.StatusBadRequest)
+		return
+	}
+	if payload.Price <= 0 {
+		http.Error(w, "price must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	_, err := lh.db.ExecContext(ctx,
+		`INSERT INTO listings (title, description, price, city)
+			VALUES ($1, $2, $3, $4)`,
+		payload.Title,
+		payload.Description,
+		payload.Price,
+		payload.City,
+	)
+	if err != nil {
+		slog.ErrorContext(ctx, "database insert failed",
+			"operation", "listings.add",
+			"err", err,
+		)
+		http.Error(w, "error while creating listing", http.StatusInternalServerError)
+		return
+	}
+
+	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
+		slog.ErrorContext(ctx, "redis cache invalidation failed",
+			"operation", "listings.add",
+			"err", err,
+		)
+		http.Error(w, "error while invalidating cached listings", http.StatusInternalServerError)
+		return
+	}
+
+	slog.InfoContext(ctx, "listing created and cache invalidated",
+		"operation", "listings.add",
+		"title", payload.Title,
+		"city", payload.City,
+	)
+
+	helpers.WriteJSON(w, http.StatusCreated, map[string]string{"status": "created"})
 }
 
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
@@ -143,6 +217,16 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
+
+	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
+		slog.ErrorContext(ctx, "redis cache invalidation failed",
+			"operation", "listings.delete",
+			"err", err,
+		)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	slog.InfoContext(ctx, "listing deleted",
 		"operation", "listings.delete",
 		"listing_id", id,
