@@ -52,7 +52,7 @@ func main() {
 	logger.Info("postgres database connected")
 	logger.Info("starting server", "port", cfg.Port)
 
-	lh := handlers.NewListingHandler(db, redis) // listing handler
+	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 
 	wrappedMux := c.Handler(mux)
 	mux.HandleFunc("GET /", handlers.Home)

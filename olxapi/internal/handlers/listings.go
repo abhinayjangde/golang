@@ -29,14 +29,16 @@ const (
 )
 
 type ListingHanlder struct {
-	db    *sql.DB
-	redis *redis.Client
+	db     *sql.DB
+	redis  *redis.Client
+	logger *slog.Logger
 }
 
-func NewListingHandler(db *sql.DB, redis *redis.Client) *ListingHanlder {
+func NewListingHandler(db *sql.DB, redis *redis.Client, logger *slog.Logger) *ListingHanlder {
 	return &ListingHanlder{
-		db:    db,
-		redis: redis,
+		db:     db,
+		redis:  redis,
+		logger: logger,
 	}
 }
 
@@ -55,7 +57,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		slog.ErrorContext(ctx, "invalid request body",
+		lh.logger.ErrorContext(ctx, "invalid request body",
 			"operation", "listings.add",
 			"err", err,
 		)
@@ -85,7 +87,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 		payload.City,
 	)
 	if err != nil {
-		slog.ErrorContext(ctx, "database insert failed",
+		lh.logger.ErrorContext(ctx, "database insert failed",
 			"operation", "listings.add",
 			"err", err,
 		)
@@ -94,7 +96,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
-		slog.ErrorContext(ctx, "redis cache invalidation failed",
+		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
 			"operation", "listings.add",
 			"err", err,
 		)
@@ -102,7 +104,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.InfoContext(ctx, "listing created and cache invalidated",
+	lh.logger.InfoContext(ctx, "listing created and cache invalidated",
 		"operation", "listings.add",
 		"title", payload.Title,
 		"city", payload.City,
@@ -118,7 +120,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var listings []listing
 		if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
-			slog.ErrorContext(ctx, "json.Unmarshal error",
+			lh.logger.ErrorContext(ctx, "json.Unmarshal error",
 				"operation", "listings.list",
 				"err", err,
 			)
@@ -128,7 +130,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		helpers.WriteJSON(w, http.StatusOK, listings)
 		return
 	} else if err != redis.Nil {
-		slog.WarnContext(ctx, "redis cache unavailable",
+		lh.logger.WarnContext(ctx, "redis cache unavailable",
 			"operation", "listings.list",
 			"err", err,
 		)
@@ -142,7 +144,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		slog.ErrorContext(ctx, "database query failed",
+		lh.logger.ErrorContext(ctx, "database query failed",
 			"operation", "listings.list",
 			"err", err,
 		)
@@ -157,7 +159,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var l listing
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
-			slog.ErrorContext(ctx, "row scan failed",
+			lh.logger.ErrorContext(ctx, "row scan failed",
 				"operation", "listings.list",
 				"err", err,
 			)
@@ -167,7 +169,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		listings = append(listings, l)
 	}
 	if err := rows.Err(); err != nil {
-		slog.ErrorContext(ctx, "rows error",
+		lh.logger.ErrorContext(ctx, "rows error",
 			"operation", "listings.list",
 			"err", err,
 		)
@@ -178,7 +180,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	// caching the listings in redis for 10 seconds
 	jsonListings, err := json.Marshal(listings)
 	if err != nil {
-		slog.ErrorContext(ctx, "json.Marshal error",
+		lh.logger.ErrorContext(ctx, "json.Marshal error",
 			"operation", "listings.list",
 			"err", err,
 		)
@@ -187,7 +189,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	}
 	err = lh.redis.Set(ctx, listingsCacheKey, jsonListings, cacheTTL).Err()
 	if err != nil {
-		slog.ErrorContext(ctx, "redis.set error",
+		lh.logger.ErrorContext(ctx, "redis.set error",
 			"operation", "listings.list",
 			"err", err,
 		)
@@ -195,7 +197,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.InfoContext(ctx, "listings fetched and cached",
+	lh.logger.InfoContext(ctx, "listings fetched and cached",
 		"operation", "listings.list",
 		"count", len(listings),
 	)
@@ -210,7 +212,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 
 	_, err := lh.db.ExecContext(ctx, `DELETE FROM listings WHERE id = $1`, id)
 	if err != nil {
-		slog.ErrorContext(ctx, "delete error",
+		lh.logger.ErrorContext(ctx, "delete error",
 			"operation", "listings.delete",
 			"err", err,
 		)
@@ -219,7 +221,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
-		slog.ErrorContext(ctx, "redis cache invalidation failed",
+		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
 			"operation", "listings.delete",
 			"err", err,
 		)
@@ -227,7 +229,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.InfoContext(ctx, "listing deleted",
+	lh.logger.InfoContext(ctx, "listing deleted",
 		"operation", "listings.delete",
 		"listing_id", id,
 	)
