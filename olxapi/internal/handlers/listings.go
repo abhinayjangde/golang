@@ -115,6 +115,8 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	requestId := ctx.Value("requestCtxId").(string)
+
 	// check if listings are cached in redis
 	redisListings, err := lh.redis.Get(ctx, listingsCacheKey).Result()
 	if err == nil {
@@ -123,6 +125,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			lh.logger.ErrorContext(ctx, "json.Unmarshal error",
 				"operation", "listings.list",
 				"err", err,
+				"request_id", requestId,
 			)
 			http.Error(w, "error while deserializing cached listings", http.StatusInternalServerError)
 			return
@@ -133,6 +136,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		lh.logger.WarnContext(ctx, "redis cache unavailable",
 			"operation", "listings.list",
 			"err", err,
+			"request_id", requestId,
 		)
 	}
 
@@ -147,6 +151,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		lh.logger.ErrorContext(ctx, "database query failed",
 			"operation", "listings.list",
 			"err", err,
+			"request_id", requestId,
 		)
 		http.Error(w, "error while fetching listings", http.StatusInternalServerError)
 		return
@@ -162,6 +167,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			lh.logger.ErrorContext(ctx, "row scan failed",
 				"operation", "listings.list",
 				"err", err,
+				"request_id", requestId,
 			)
 			http.Error(w, "error while deserializing listing", http.StatusInternalServerError)
 			return
@@ -172,6 +178,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		lh.logger.ErrorContext(ctx, "rows error",
 			"operation", "listings.list",
 			"err", err,
+			"request_id", requestId,
 		)
 		http.Error(w, "error while reading listing", http.StatusInternalServerError)
 		return
@@ -183,6 +190,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		lh.logger.ErrorContext(ctx, "json.Marshal error",
 			"operation", "listings.list",
 			"err", err,
+			"request_id", requestId,
 		)
 		http.Error(w, "error while serializing listings", http.StatusInternalServerError)
 		return
@@ -192,6 +200,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		lh.logger.ErrorContext(ctx, "redis.set error",
 			"operation", "listings.list",
 			"err", err,
+			"request_id", requestId,
 		)
 		http.Error(w, "error while saving listings to cache", http.StatusInternalServerError)
 		return
@@ -200,6 +209,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	lh.logger.InfoContext(ctx, "listings fetched and cached",
 		"operation", "listings.list",
 		"count", len(listings),
+		"request_id", requestId,
 	)
 
 	helpers.WriteJSON(w, http.StatusOK, listings)

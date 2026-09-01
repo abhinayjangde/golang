@@ -10,6 +10,7 @@ import (
 	"github.com/abhinayjangde/olxapi/internal/db"
 	"github.com/abhinayjangde/olxapi/internal/handlers"
 	"github.com/abhinayjangde/olxapi/internal/logging"
+	"github.com/abhinayjangde/olxapi/internal/middlewares"
 	"github.com/rs/cors"
 )
 
@@ -54,7 +55,8 @@ func main() {
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 
-	wrappedMux := c.Handler(mux)
+	wrappedMux := middlewares.RequestId(c.Handler(mux))
+
 	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
 	mux.HandleFunc("GET /listings", lh.List)
