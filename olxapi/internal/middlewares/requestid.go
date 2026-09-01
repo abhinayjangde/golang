@@ -24,3 +24,8 @@ func RequestId(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func GetRequestId(ctx context.Context) string {
+	requestId := ctx.Value(RequestId)
+	return requestId
+}

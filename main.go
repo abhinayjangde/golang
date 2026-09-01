@@ -1,23 +1,13 @@
 package main
 
-import (
-	"fmt"
-	"sync"
-	"time"
-)
+import "fmt"
 
-func f(n int, wg *sync.WaitGroup) {
-	defer wg.Done()
-	fmt.Println("done ", n)
-
-	time.Sleep(time.Millisecond * 50)
-}
 func main() {
-	var wg sync.WaitGroup
+	var a, b, c byte
 
-	wg.Add((10))
-	for i := range 10 {
-		f(i, &wg)
-	}
-	wg.Wait()
+	fmt.Scan(&a)
+	fmt.Scan(&b)
+
+	c = a + b
+	fmt.Println(c)
 }
