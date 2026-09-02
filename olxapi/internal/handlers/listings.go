@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/helpers"
+	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -115,7 +116,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	requestId := ctx.Value("requestCtxId").(string)
+	requestId := middleware.RequestIDFromContext(ctx)
 
 	// check if listings are cached in redis
 	redisListings, err := lh.redis.Get(ctx, listingsCacheKey).Result()

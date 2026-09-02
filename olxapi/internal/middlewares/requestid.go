@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"context"
@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type ctxKey int
+
+const (
+	requestIDKey ctxKey = iota
+)
 const (
 	requestId = "X-Request-ID"
 )
@@ -20,12 +25,11 @@ func RequestId(next http.Handler) http.Handler {
 		}
 		w.Header().Add(requestId, id)
 
-		ctx := context.WithValue(r.Context(), "requestCtxId", id)
+		ctx := context.WithValue(r.Context(), requestIDKey, id)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func GetRequestId(ctx context.Context) string {
-	requestId := ctx.Value(RequestId)
-	return requestId
+func RequestIDFromContext(ctx context.Context) string {
+	return ctx.Value(requestIDKey).(string)
 }

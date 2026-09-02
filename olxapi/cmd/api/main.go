@@ -10,7 +10,7 @@ import (
 	"github.com/abhinayjangde/olxapi/internal/db"
 	"github.com/abhinayjangde/olxapi/internal/handlers"
 	"github.com/abhinayjangde/olxapi/internal/logging"
-	"github.com/abhinayjangde/olxapi/internal/middlewares"
+	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
 	"github.com/rs/cors"
 )
 
@@ -40,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 	mux := http.NewServeMux()
-	// wrappedMux := middlewares.CorsMiddleware(mux) // for fixing cors policy
+	// wrappedMux := middleware.CorsMiddleware(mux) // for fixing cors policy
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://127.0.0.1:5500"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -55,7 +55,7 @@ func main() {
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 
-	wrappedMux := middlewares.RequestId(c.Handler(mux))
+	wrappedMux := middleware.RequestId(c.Handler(mux))
 
 	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /healthz", handlers.Healthz)
