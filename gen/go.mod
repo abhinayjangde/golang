@@ -2,12 +2,9 @@ module github.com/abhinayjangde/gen
 
 go 1.27.0
 
-require github.com/openai/openai-go/v3 v3.52.0
-
 require (
-	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/tidwall/gjson v1.19.0 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.1 // indirect
-	github.com/tidwall/sjson v1.2.5 // indirect
+	github.com/abhinayjangde/slugify v0.1.0
+	github.com/joho/godotenv v1.5.1
 )
+
+require github.com/abhinayjangde/sarvam v0.1.0 // indirect
