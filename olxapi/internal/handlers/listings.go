@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/helpers"
+	"github.com/abhinayjangde/olxapi/internal/httpx"
 	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
 	"github.com/redis/go-redis/v9"
 )
@@ -154,7 +155,8 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			"err", err,
 			"request_id", requestId,
 		)
-		http.Error(w, "error while fetching listings", http.StatusInternalServerError)
+
+		httpx.Error(w, http.StatusInternalServerError, "error while fetching listings", httpx.CodeInternalError)
 		return
 	}
 
