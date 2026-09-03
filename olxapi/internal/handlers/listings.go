@@ -63,7 +63,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 			"operation", "listings.add",
 			"err", err,
 		)
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		httpx.Error(w, http.StatusBadRequest, "invalid request body", httpx.CodeInvalidID)
 		return
 	}
 
@@ -72,11 +72,11 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 	payload.City = strings.TrimSpace(payload.City)
 
 	if payload.Title == "" {
-		http.Error(w, "title is required", http.StatusBadRequest)
+		httpx.Error(w, http.StatusBadRequest, "title is required", httpx.CodeInvalidID)
 		return
 	}
 	if payload.Price <= 0 {
-		http.Error(w, "price must be greater than 0", http.StatusBadRequest)
+		httpx.Error(w, http.StatusBadRequest, "price must be greater than 0", httpx.CodeInvalidID)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 			"operation", "listings.add",
 			"err", err,
 		)
-		http.Error(w, "error while creating listing", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while creating listing", httpx.CodeInternalError)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
 			"operation", "listings.add",
 			"err", err,
 		)
-		http.Error(w, "error while invalidating cached listings", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while invalidating cached listings", httpx.CodeInternalError)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 				"err", err,
 				"request_id", requestId,
 			)
-			http.Error(w, "error while deserializing cached listings", http.StatusInternalServerError)
+			httpx.Error(w, http.StatusInternalServerError, "error while deserializing cached listings", httpx.CodeInternalError)
 			return
 		}
 		helpers.WriteJSON(w, http.StatusOK, listings)
@@ -172,7 +172,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 				"err", err,
 				"request_id", requestId,
 			)
-			http.Error(w, "error while deserializing listing", http.StatusInternalServerError)
+			httpx.Error(w, http.StatusInternalServerError, "error while deserializing listing", httpx.CodeInternalError)
 			return
 		}
 		listings = append(listings, l)
@@ -183,7 +183,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			"err", err,
 			"request_id", requestId,
 		)
-		http.Error(w, "error while reading listing", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while reading listing", httpx.CodeInternalError)
 		return
 	}
 
@@ -195,7 +195,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			"err", err,
 			"request_id", requestId,
 		)
-		http.Error(w, "error while serializing listings", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while serializing listings", httpx.CodeInternalError)
 		return
 	}
 	err = lh.redis.Set(ctx, listingsCacheKey, jsonListings, cacheTTL).Err()
@@ -205,7 +205,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			"err", err,
 			"request_id", requestId,
 		)
-		http.Error(w, "error while saving listings to cache", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while saving listings to cache", httpx.CodeInternalError)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 			"operation", "listings.delete",
 			"err", err,
 		)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "error while deleting a listing", httpx.CodeInternalError)
 		return
 	}
 
@@ -238,7 +238,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 			"operation", "listings.delete",
 			"err", err,
 		)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "redis cache invalidation failed", httpx.CodeInternalError)
 		return
 	}
 
