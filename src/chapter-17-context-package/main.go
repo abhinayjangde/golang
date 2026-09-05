@@ -3,44 +3,36 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 )
 
 func processOrders(ctx context.Context, orders <-chan int) {
-
-}
-
-func consume(ch <-chan string) {
-	for msg := range ch {
-		fmt.Println(msg)
-	}
-
-}
-
-func streamNumber() <-chan int {
-	ch := make(chan int)
-
-	go func() {
-		for i := range 4 {
-			ch <- i
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("worker stopping:", ctx.Err())
+			return
+		case order, ok := <-orders:
+			if !ok {
+				fmt.Println("no more orders")
+				return
+			}
+			fmt.Println("processed order", order)
 		}
-		close(ch)
-	}()
-	return ch
-}
-func main() {
-	bridge := make(chan string)
-
-	go func() {
-		bridge <- "hello"
-		bridge <- "world"
-		close(bridge)
-	}()
-	// consume(bridge)
-
-	dataStream := streamNumber()
-
-	for n := range dataStream {
-		fmt.Println(n)
 	}
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	orders := make(chan int)
+	go processOrders(ctx, orders)
+
+	orders <- 101
+	orders <- 102
+
+	time.Sleep(10 * time.Millisecond)
+	cancel()
+	time.Sleep(10 * time.Millisecond)
 
 }
