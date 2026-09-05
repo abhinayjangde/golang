@@ -20,7 +20,7 @@ type listing struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
-	Price       string    `json:"price"`
+	Price       int64     `json:"price"`
 	City        string    `json:"city"`
 	CreatedAt   time.Time `json:"created_at"`
 }
@@ -46,73 +46,6 @@ func NewListingHandler(db *sql.DB, redis *redis.Client, logger *slog.Logger) *Li
 
 func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
 	return lh.redis.Del(ctx, listingsCacheKey).Err()
-}
-
-func (lh ListingHanlder) Add(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var payload struct {
-		Title       string `json:"title"`
-		Description string `json:"description"`
-		Price       int64  `json:"price"`
-		City        string `json:"city"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		lh.logger.ErrorContext(ctx, "invalid request body",
-			"operation", "listings.add",
-			"err", err,
-		)
-		httpx.Error(w, http.StatusBadRequest, "invalid request body", httpx.CodeInvalidID)
-		return
-	}
-
-	payload.Title = strings.TrimSpace(payload.Title)
-	payload.Description = strings.TrimSpace(payload.Description)
-	payload.City = strings.TrimSpace(payload.City)
-
-	if payload.Title == "" {
-		httpx.Error(w, http.StatusBadRequest, "title is required", httpx.CodeInvalidID)
-		return
-	}
-	if payload.Price <= 0 {
-		httpx.Error(w, http.StatusBadRequest, "price must be greater than 0", httpx.CodeInvalidID)
-		return
-	}
-
-	_, err := lh.db.ExecContext(ctx,
-		`INSERT INTO listings (title, description, price, city)
-			VALUES ($1, $2, $3, $4)`,
-		payload.Title,
-		payload.Description,
-		payload.Price,
-		payload.City,
-	)
-	if err != nil {
-		lh.logger.ErrorContext(ctx, "database insert failed",
-			"operation", "listings.add",
-			"err", err,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "error while creating listing", httpx.CodeInternalError)
-		return
-	}
-
-	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
-		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
-			"operation", "listings.add",
-			"err", err,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "error while invalidating cached listings", httpx.CodeInternalError)
-		return
-	}
-
-	lh.logger.InfoContext(ctx, "listing created and cache invalidated",
-		"operation", "listings.add",
-		"title", payload.Title,
-		"city", payload.City,
-	)
-
-	helpers.WriteJSON(w, http.StatusCreated, map[string]string{"status": "created"})
 }
 
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
@@ -248,4 +181,60 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	helpers.WriteJSON(w, http.StatusNoContent, nil)
+}
+
+func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	requestId := middleware.RequestIDFromContext(ctx)
+
+	var req listing
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		lh.logger.ErrorContext(ctx, "failed to decode", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJSON)
+		return
+	}
+
+	// validating req.body
+	req.Title = strings.TrimSpace(req.Title)
+	req.Description = strings.TrimSpace(req.Description)
+	req.City = strings.TrimSpace(req.City)
+
+	if req.Title == "" {
+		httpx.Error(w, http.StatusBadRequest, "title is required", httpx.CodeMalformedJSON)
+		return
+	}
+	if req.Price <= 0 {
+		httpx.Error(w, http.StatusBadRequest, "price must be greater than 0", httpx.CodeMalformedJSON)
+		return
+	}
+
+	row := lh.db.QueryRowContext(ctx,
+		`INSERT INTO listings (title, description, price, city)
+			VALUES ($1, $2, $3, $4) RETURNING id`,
+		req.Title,
+		req.Description,
+		req.Price,
+		req.City,
+	)
+
+	var id string
+	if err := row.Scan(&id); err != nil {
+		lh.logger.ErrorContext(ctx, "failed to insert", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
+		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
+			"request_id", requestId,
+			"err", err,
+		)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	lh.logger.InfoContext(ctx, "listing created", "request_id", requestId, "listing_id", id)
+
+	helpers.WriteJSON(w, http.StatusCreated, map[string]string{"status": "created", "id": id})
 }

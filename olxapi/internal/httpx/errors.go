@@ -11,7 +11,7 @@ const (
 	CodeInvalidID        Code = "invalid_id"
 	CodeNotFound         Code = "not_found"
 	CodeInternalError    Code = "internal_error"
-	CodeMalformedJson    Code = "malformed_json"
+	CodeMalformedJSON    Code = "malformed_json"
 	CodeValidationFailed Code = "validation_failed"
 	CodeUnauthenticated  Code = "unauthenticated"
 	CodeForbidden        Code = "forbidden"
