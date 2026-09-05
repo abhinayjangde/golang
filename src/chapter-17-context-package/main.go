@@ -15,6 +15,18 @@ func consume(ch <-chan string) {
 	}
 
 }
+
+func streamNumber() <-chan int {
+	ch := make(chan int)
+
+	go func() {
+		for i := range 4 {
+			ch <- i
+		}
+		close(ch)
+	}()
+	return ch
+}
 func main() {
 	bridge := make(chan string)
 
@@ -23,6 +35,12 @@ func main() {
 		bridge <- "world"
 		close(bridge)
 	}()
-	consume(bridge)
+	// consume(bridge)
+
+	dataStream := streamNumber()
+
+	for n := range dataStream {
+		fmt.Println(n)
+	}
 
 }
