@@ -1,3 +1,6 @@
+Go doesn't have class inheritance. Instead, we use struct embedding (composition)
+
+```go
 package main
 
 import "fmt"
@@ -66,3 +69,4 @@ func main() {
 	animal := NewAnimal("tiger", 4, "oooo")
 	animal.Speak()
 }
+```
