@@ -1,3 +1,6 @@
+Go takes a unique approach to OOP. Instead of traditional classes and inheritance, Go uses structs and interfaces with composition over inheritance. Let me teach you the core OOP concepts in Go!
+
+```go
 package main
 
 import "fmt"
@@ -45,3 +48,4 @@ func main() {
 
 	fmt.Println(p.GetName(), "is adult:", p.IsAdult())
 }
+```
