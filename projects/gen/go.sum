@@ -1,6 +1,4 @@
 github.com/abhinayjangde/sarvam v0.1.0 h1:4nrpRtzDakKNYZRzpqJM1qS22vNlJU4+Rwp+9oenrFA=
 github.com/abhinayjangde/sarvam v0.1.0/go.mod h1:KrNzIqXV6gEVhkteU1HoNyL6XYs5KrHUMVJc7qBQAGA=
-github.com/abhinayjangde/slugify v0.1.0 h1:xLs0Mq8ETgjAoskNoWfsILnmXn+ETV5Nh4kFHhI7o4Y=
-github.com/abhinayjangde/slugify v0.1.0/go.mod h1:8Wy9PE86RBtnjL4lbZs0U3LK87Da1rCRM3hZQuNPY1Q=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
