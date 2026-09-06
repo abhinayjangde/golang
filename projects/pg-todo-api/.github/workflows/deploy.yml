@@ -1,0 +1,40 @@
+name: Deploy Go API (Docker) to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/experiments
+
+            # Write .env file from GitHub secrets
+            cat > .env << EOF
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            EOF
+            
+            # Pull latest code
+            git pull origin main
+
+            # Rebuild and restart containers
+            docker compose down
+            docker compose up -d --build
+
+            # Show running containers
+            docker compose ps
+      
