@@ -195,7 +195,13 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := req.Validate(); err != nil {
-		httpx.Error(w, http.StatusUnprocessableEntity, err.Error(), httpx.CodeValidationFailed)
+
+		// verr := &ValidationError{}
+		var verr *ValidationError
+
+		errors.As(err, &verr)
+
+		httpx.ValidationError(w, http.StatusUnprocessableEntity, err.Error(), httpx.CodeValidationFailed, verr.Field)
 		return
 	}
 
