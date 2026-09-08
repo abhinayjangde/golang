@@ -7,7 +7,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/abhinayjangde/olxapi/internal/helpers"
@@ -195,17 +194,8 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validating req.body
-	req.Title = strings.TrimSpace(req.Title)
-	req.Description = strings.TrimSpace(req.Description)
-	req.City = strings.TrimSpace(req.City)
-
-	if req.Title == "" {
-		httpx.Error(w, http.StatusBadRequest, "title is required", httpx.CodeMalformedJSON)
-		return
-	}
-	if req.Price <= 0 {
-		httpx.Error(w, http.StatusBadRequest, "price must be greater than 0", httpx.CodeMalformedJSON)
+	if err := req.Validate(); err != nil {
+		httpx.Error(w, http.StatusUnprocessableEntity, err.Error(), httpx.CodeValidationFailed)
 		return
 	}
 
