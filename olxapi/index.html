@@ -19,7 +19,7 @@
 
         async function listings() {
             try {
-                const res = await fetch("http://localhost:8080/listings");
+                const res = await fetch("https://go.abhinayjangde.dev/listings");
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
@@ -28,14 +28,38 @@
                 productListings = data;
 
                 renderListingElem.innerHTML = "";
+
+                
                 productListings.forEach((item) => {
+                    let container = document.createElement("div");
                     const p = document.createElement("p");
+                    let deleteBtn = document.createElement("button")
+
+
+                    container.style.backgroundColor = "lightgreen";
+                    container.style.padding = "5px 10px";
+                    container.style.margin = "5px";
+                    container.style.display = "flex";
+                    container.style.alignItems= "center"
+                    container.style.gap = "10px"
+
                     p.textContent = `${item.title} - ${item.city} - ₹${item.price}`;
-                    renderListingElem.appendChild(p);
+
+                    deleteBtn.textContent = "delete"
+                    deleteBtn.id = "delete-listing"
+                    deleteBtn.onclick = async function(){
+                        await fetch(`https://go.abhinayjangde.dev/listings/${item.id}`,{
+                            method: "DELETE"
+                        })
+
+                    }
+                    container.appendChild(p)
+                    container.appendChild(deleteBtn)
+                    renderListingElem.appendChild(container);
                 });
 
                 statusEl.textContent = `status: fetched ${productListings.length} listings`;
-                console.log("productListings:", productListings);
+                // console.log("productListings:", productListings);
             } catch (error) {
                 statusEl.textContent = "status: error fetching listings";
                 console.error(error);
