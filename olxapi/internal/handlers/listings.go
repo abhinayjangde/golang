@@ -76,10 +76,22 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		}
 
 		etag, err := generateETag(listings)
+
 		if err != nil {
-			httpx.Error(w, http.StatusInternalServerError, "failed to generate Etag", httpx.CodeInternalError)
+			lh.logger.ErrorContext(ctx, "failed to generate Etag",
+				"operation", "listings.list",
+				"err", err,
+				"request_id", requestId,
+			)
+			httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+			return
 		}
+
 		w.Header().Set("ETag", etag)
+		if r.Header.Get("If-None-Match") == etag {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 		httpx.WriteJSON(w, http.StatusOK, listings)
 		return
 	} else if err != redis.Nil {
@@ -166,10 +178,23 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 
 	etag, err := generateETag(listings)
 	if err != nil {
-		httpx.Error(w, http.StatusInternalServerError, "failed to generate Etag", httpx.CodeInternalError)
+		lh.logger.ErrorContext(ctx, "failed to generate Etag",
+			"operation", "listings.list",
+			"err", err,
+			"request_id", requestId,
+		)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
 	}
+
 	w.Header().Set("ETag", etag)
+	if r.Header.Get("If-None-Match") == etag {
+
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	httpx.WriteJSON(w, http.StatusOK, listings)
+
 }
 
 func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
