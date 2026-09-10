@@ -13,17 +13,9 @@ import (
 
 	"github.com/abhinayjangde/ecom/internal/httpx"
 	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
+	"github.com/abhinayjangde/ecom/internal/models"
 	"github.com/redis/go-redis/v9"
 )
-
-type listing struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Price       int64     `json:"price"`
-	City        string    `json:"city"`
-	CreatedAt   time.Time `json:"created_at"`
-}
 
 const (
 	listingsCacheKey = "listings"
@@ -49,7 +41,7 @@ func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
 }
 
 // Etag hash generation
-func generateETag(listings []listing) (string, error) {
+func generateETag(listings []models.Listings) (string, error) {
 	data, err := json.Marshal(listings)
 	if err != nil {
 		return "", err
@@ -58,7 +50,7 @@ func generateETag(listings []listing) (string, error) {
 	return `"` + hex.EncodeToString(hash[:]) + `"`, nil
 }
 
-func writeListingsResponse(w http.ResponseWriter, r *http.Request, listings []listing) error {
+func writeListingsResponse(w http.ResponseWriter, r *http.Request, listings []models.Listings) error {
 	etag, err := generateETag(listings)
 	if err != nil {
 		return err
@@ -82,7 +74,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	// check if listings are cached in redis
 	redisListings, err := lh.redis.Get(ctx, listingsCacheKey).Result()
 	if err == nil {
-		var listings []listing
+		var listings []models.Listings
 		if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
 			lh.logger.ErrorContext(ctx, "json.Unmarshal error",
 				"operation", "listings.list",
@@ -131,10 +123,10 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 
-	listings := []listing{}
+	listings := []models.Listings{}
 
 	for rows.Next() {
-		var l listing
+		var l models.Listings
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
 			lh.logger.ErrorContext(ctx, "row scan failed",
 				"operation", "listings.list",
