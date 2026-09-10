@@ -9,8 +9,8 @@ import (
 	"github.com/abhinayjangde/ecom/internal/config"
 	"github.com/abhinayjangde/ecom/internal/db"
 	"github.com/abhinayjangde/ecom/internal/handlers"
-	"github.com/abhinayjangde/ecom/internal/logging"
 	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
+	"github.com/abhinayjangde/ecom/internal/utils"
 	"github.com/rs/cors"
 )
 
@@ -19,7 +19,7 @@ func main() {
 	cfg := config.MustLoad()
 
 	// logger setup
-	logger, closer, err := logging.New(cfg.LogFile)
+	logger, closer, err := utils.NewLogger(cfg.LogFile)
 	if err != nil {
 		slog.Error("logger initialization failed", "err", err)
 		os.Exit(1)

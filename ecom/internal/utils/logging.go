@@ -1,4 +1,4 @@
-package logging
+package utils
 
 import (
 	"io"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func New(filePath string) (*slog.Logger, io.Closer, error) {
+func NewLogger(filePath string) (*slog.Logger, io.Closer, error) {
 	var output io.Writer = os.Stdout
 	var file *os.File
 
