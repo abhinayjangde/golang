@@ -57,6 +57,23 @@ func generateETag(listings []listing) (string, error) {
 	return `"` + hex.EncodeToString(hash[:]) + `"`, nil
 }
 
+func writeListingsResponse(w http.ResponseWriter, r *http.Request, listings []listing) error {
+	etag, err := generateETag(listings)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("ETag", etag)
+
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return nil
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, listings)
+	return nil
+}
+
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestId := middleware.RequestIDFromContext(ctx)
@@ -75,10 +92,8 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		etag, err := generateETag(listings)
-
-		if err != nil {
-			lh.logger.ErrorContext(ctx, "failed to generate Etag",
+		if err := writeListingsResponse(w, r, listings); err != nil {
+			lh.logger.ErrorContext(ctx, "failed to write listings response",
 				"operation", "listings.list",
 				"err", err,
 				"request_id", requestId,
@@ -86,14 +101,6 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 			return
 		}
-
-		w.Header().Set("ETag", etag)
-		if r.Header.Get("If-None-Match") == etag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-		httpx.WriteJSON(w, http.StatusOK, listings)
-		return
 	} else if err != redis.Nil {
 		lh.logger.WarnContext(ctx, "redis cache unavailable",
 			"operation", "listings.list",
@@ -176,9 +183,8 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		"request_id", requestId,
 	)
 
-	etag, err := generateETag(listings)
-	if err != nil {
-		lh.logger.ErrorContext(ctx, "failed to generate Etag",
+	if err := writeListingsResponse(w, r, listings); err != nil {
+		lh.logger.ErrorContext(ctx, "failed to write listings response",
 			"operation", "listings.list",
 			"err", err,
 			"request_id", requestId,
@@ -186,14 +192,6 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
 	}
-
-	w.Header().Set("ETag", etag)
-	if r.Header.Get("If-None-Match") == etag {
-
-		w.WriteHeader(http.StatusNotModified)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, listings)
 
 }
 
