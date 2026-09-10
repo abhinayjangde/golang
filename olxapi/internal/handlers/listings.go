@@ -48,6 +48,7 @@ func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
 	return lh.redis.Del(ctx, listingsCacheKey).Err()
 }
 
+// Etag hash generation
 func generateETag(listings []listing) (string, error) {
 	data, err := json.Marshal(listings)
 	if err != nil {
