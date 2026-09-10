@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/abhinayjangde/olxapi/internal/helpers"
 	"github.com/abhinayjangde/olxapi/internal/httpx"
 	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
 	"github.com/redis/go-redis/v9"
@@ -64,7 +63,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusInternalServerError, "error while deserializing cached listings", httpx.CodeInternalError)
 			return
 		}
-		helpers.WriteJSON(w, http.StatusOK, listings)
+		httpx.WriteJSON(w, http.StatusOK, listings)
 		return
 	} else if err != redis.Nil {
 		lh.logger.WarnContext(ctx, "redis cache unavailable",
@@ -147,8 +146,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		"request_id", requestId,
 	)
 
-	helpers.WriteJSON(w, http.StatusOK, listings)
-
+	httpx.WriteJSON(w, http.StatusOK, listings)
 }
 
 func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
@@ -179,7 +177,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 		"listing_id", id,
 	)
 
-	helpers.WriteJSON(w, http.StatusNoContent, nil)
+	httpx.WriteJSON(w, http.StatusNoContent, nil)
 }
 
 func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
@@ -232,5 +230,5 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 
 	lh.logger.InfoContext(ctx, "listing created", "request_id", requestId, "listing_id", out.ID)
 
-	helpers.WriteJSON(w, http.StatusCreated, out)
+	httpx.WriteJSON(w, http.StatusCreated, out)
 }
