@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/abhinayjangde/olxapi/internal/httpx"
+	"github.com/abhinayjangde/ecom/internal/httpx"
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {

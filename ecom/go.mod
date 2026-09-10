@@ -1,4 +1,4 @@
-module github.com/abhinayjangde/olxapi
+module github.com/abhinayjangde/ecom
 
 go 1.26.5
 

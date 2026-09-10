@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/abhinayjangde/olxapi/internal/config"
-	"github.com/abhinayjangde/olxapi/internal/db"
-	"github.com/abhinayjangde/olxapi/internal/handlers"
-	"github.com/abhinayjangde/olxapi/internal/logging"
-	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
+	"github.com/abhinayjangde/ecom/internal/config"
+	"github.com/abhinayjangde/ecom/internal/db"
+	"github.com/abhinayjangde/ecom/internal/handlers"
+	"github.com/abhinayjangde/ecom/internal/logging"
+	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
 	"github.com/rs/cors"
 )
 

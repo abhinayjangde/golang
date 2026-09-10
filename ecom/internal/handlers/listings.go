@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/abhinayjangde/olxapi/internal/httpx"
-	middleware "github.com/abhinayjangde/olxapi/internal/middlewares"
+	"github.com/abhinayjangde/ecom/internal/httpx"
+	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
 	"github.com/redis/go-redis/v9"
 )
 

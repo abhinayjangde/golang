@@ -49,4 +49,4 @@ go run ./cmd/migrate up
 
 
 
-> I highly recommend everyone to read this (olxapi)[https://github.com/abhinayjangde/olxapi] codebase.
+> I highly recommend everyone to read this (olxapi)[https://github.com/abhinayjangde/golang/ecom] codebase.
