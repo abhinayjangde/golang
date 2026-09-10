@@ -54,6 +54,7 @@ func main() {
 	logger.Info("starting server", "port", cfg.Port)
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
+	uh := handlers.NewUserHandler(db, logger)           // user handler
 
 	wrappedMux := middleware.RequestId(c.Handler(mux))
 
@@ -62,6 +63,8 @@ func main() {
 	mux.HandleFunc("GET /listings", lh.List)
 	mux.HandleFunc("POST /listings", lh.Create)
 	mux.HandleFunc("DELETE /listings/{id}", lh.Delete)
+
+	mux.HandleFunc("POST /users", uh.Create)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,

@@ -232,12 +232,9 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := req.Validate(); err != nil {
-
 		// verr := &ValidationError{}
 		var verr *ValidationError
-
 		errors.As(err, &verr)
-
 		httpx.ValidationError(w, http.StatusUnprocessableEntity, err.Error(), httpx.CodeValidationFailed, verr.Field)
 		return
 	}
@@ -258,6 +255,7 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// invalidate redis cache
 	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
 		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
 			"request_id", requestId,

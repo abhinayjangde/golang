@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Listing DTOs
 type CreateListingRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -42,4 +43,17 @@ type CreateListingResponse struct {
 	ID        string    `json:"id"`
 	Title     string    `json:"title"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// User DTOs
+
+type CreateUserRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type CreateUserResponse struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
 }
