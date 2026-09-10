@@ -33,7 +33,8 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Validate the request
-
+	// TODO: Check if the email already exists
+	// TODO: Hash the password
 	row := uh.db.QueryRowContext(ctx, `
 	INSERT INTO users (name, email, password_hash)
 	VALUES ($1, $2, $3) RETURNING id, email`, req.Name, req.Email, req.Password)

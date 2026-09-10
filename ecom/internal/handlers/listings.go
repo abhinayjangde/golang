@@ -72,36 +72,37 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	requestId := middleware.RequestIDFromContext(ctx)
 
 	// check if listings are cached in redis
-	redisListings, err := lh.redis.Get(ctx, listingsCacheKey).Result()
-	if err == nil {
-		var listings []models.Listings
-		if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
-			lh.logger.ErrorContext(ctx, "json.Unmarshal error",
+	/*
+		redisListings, err := lh.redis.Get(ctx, listingsCacheKey).Result()
+		if err == nil {
+			var listings []models.Listings
+			if err := json.Unmarshal([]byte(redisListings), &listings); err != nil {
+				lh.logger.ErrorContext(ctx, "json.Unmarshal error",
+					"operation", "listings.list",
+					"err", err,
+					"request_id", requestId,
+				)
+				httpx.Error(w, http.StatusInternalServerError, "error while deserializing cached listings", httpx.CodeInternalError)
+				return
+			}
+
+			if err := writeListingsResponse(w, r, listings); err != nil {
+				lh.logger.ErrorContext(ctx, "failed to write listings response",
+					"operation", "listings.list",
+					"err", err,
+					"request_id", requestId,
+				)
+				httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+				return
+			}
+		} else if err != redis.Nil {
+			lh.logger.WarnContext(ctx, "redis cache unavailable",
 				"operation", "listings.list",
 				"err", err,
 				"request_id", requestId,
 			)
-			httpx.Error(w, http.StatusInternalServerError, "error while deserializing cached listings", httpx.CodeInternalError)
-			return
 		}
-
-		if err := writeListingsResponse(w, r, listings); err != nil {
-			lh.logger.ErrorContext(ctx, "failed to write listings response",
-				"operation", "listings.list",
-				"err", err,
-				"request_id", requestId,
-			)
-			httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
-			return
-		}
-	} else if err != redis.Nil {
-		lh.logger.WarnContext(ctx, "redis cache unavailable",
-			"operation", "listings.list",
-			"err", err,
-			"request_id", requestId,
-		)
-	}
-
+	*/
 	// if not cached, fetch from database
 	rows, err := lh.db.QueryContext(ctx,
 		`SELECT id, title, description, price, city, created_at
@@ -149,27 +150,28 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// caching the listings in redis for 10 seconds
-	jsonListings, err := json.Marshal(listings)
-	if err != nil {
-		lh.logger.ErrorContext(ctx, "json.Marshal error",
-			"operation", "listings.list",
-			"err", err,
-			"request_id", requestId,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "error while serializing listings", httpx.CodeInternalError)
-		return
-	}
-	err = lh.redis.Set(ctx, listingsCacheKey, jsonListings, cacheTTL).Err()
-	if err != nil {
-		lh.logger.ErrorContext(ctx, "redis.set error",
-			"operation", "listings.list",
-			"err", err,
-			"request_id", requestId,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "error while saving listings to cache", httpx.CodeInternalError)
-		return
-	}
-
+	/*
+		jsonListings, err := json.Marshal(listings)
+		if err != nil {
+			lh.logger.ErrorContext(ctx, "json.Marshal error",
+				"operation", "listings.list",
+				"err", err,
+				"request_id", requestId,
+			)
+			httpx.Error(w, http.StatusInternalServerError, "error while serializing listings", httpx.CodeInternalError)
+			return
+		}
+		err = lh.redis.Set(ctx, listingsCacheKey, jsonListings, cacheTTL).Err()
+		if err != nil {
+			lh.logger.ErrorContext(ctx, "redis.set error",
+				"operation", "listings.list",
+				"err", err,
+				"request_id", requestId,
+			)
+			httpx.Error(w, http.StatusInternalServerError, "error while saving listings to cache", httpx.CodeInternalError)
+			return
+		}
+	*/
 	lh.logger.InfoContext(ctx, "listings fetched and cached",
 		"operation", "listings.list",
 		"count", len(listings),
@@ -191,25 +193,29 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-
+	requestId := middleware.RequestIDFromContext(ctx)
 	_, err := lh.db.ExecContext(ctx, `DELETE FROM listings WHERE id = $1`, id)
 	if err != nil {
 		lh.logger.ErrorContext(ctx, "delete error",
 			"operation", "listings.delete",
 			"err", err,
+			"request_id", requestId,
 		)
 		httpx.Error(w, http.StatusInternalServerError, "error while deleting a listing", httpx.CodeInternalError)
 		return
 	}
 
-	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
-		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
-			"operation", "listings.delete",
-			"err", err,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "redis cache invalidation failed", httpx.CodeInternalError)
-		return
-	}
+	/*
+		if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
+			lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
+				"operation", "listings.delete",
+				"err", err,
+				"request_id", requestId,
+			)
+			httpx.Error(w, http.StatusInternalServerError, "redis cache invalidation failed", httpx.CodeInternalError)
+			return
+		}
+	*/
 
 	lh.logger.InfoContext(ctx, "listing deleted",
 		"operation", "listings.delete",
@@ -255,15 +261,17 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// invalidate redis cache
-	if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
-		lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
-			"request_id", requestId,
-			"err", err,
-		)
-		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
-		return
-	}
+	// invalidate redis cache (for development purposes, we can comment this out to see the cache in action)
+	/*
+		if err := lh.invalidateListingsCache(ctx); err != nil && !errors.Is(err, redis.Nil) {
+			lh.logger.ErrorContext(ctx, "redis cache invalidation failed",
+				"request_id", requestId,
+				"err", err,
+			)
+			httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+			return
+		}
+	*/
 
 	lh.logger.InfoContext(ctx, "listing created", "request_id", requestId, "listing_id", out.ID)
 
