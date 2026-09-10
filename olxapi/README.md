@@ -46,3 +46,7 @@ go get github.com/redis/go-redis/v9
 
 # migrate all migrations
 go run ./cmd/migrate up
+
+
+
+> I highly recommend everyone to read this (olxapi)[https://github.com/abhinayjangde/olxapi] codebase.
