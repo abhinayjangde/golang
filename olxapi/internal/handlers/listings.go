@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -46,6 +48,15 @@ func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
 	return lh.redis.Del(ctx, listingsCacheKey).Err()
 }
 
+func generateETag(listings []listing) (string, error) {
+	data, err := json.Marshal(listings)
+	if err != nil {
+		return "", err
+	}
+	hash := sha256.Sum256(data)
+	return `"` + hex.EncodeToString(hash[:]) + `"`, nil
+}
+
 func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestId := middleware.RequestIDFromContext(ctx)
@@ -63,6 +74,12 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusInternalServerError, "error while deserializing cached listings", httpx.CodeInternalError)
 			return
 		}
+
+		etag, err := generateETag(listings)
+		if err != nil {
+			httpx.Error(w, http.StatusInternalServerError, "failed to generate Etag", httpx.CodeInternalError)
+		}
+		w.Header().Set("ETag", etag)
 		httpx.WriteJSON(w, http.StatusOK, listings)
 		return
 	} else if err != redis.Nil {
@@ -73,6 +90,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	// if not cached, fetch from database
 	rows, err := lh.db.QueryContext(ctx,
 		`SELECT id, title, description, price, city, created_at
 			FROM listings
@@ -146,6 +164,11 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 		"request_id", requestId,
 	)
 
+	etag, err := generateETag(listings)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "failed to generate Etag", httpx.CodeInternalError)
+	}
+	w.Header().Set("ETag", etag)
 	httpx.WriteJSON(w, http.StatusOK, listings)
 }
 
