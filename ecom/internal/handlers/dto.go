@@ -57,3 +57,25 @@ type CreateUserResponse struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 }
+
+func (req CreateUserRequest) Validate() error {
+	if strings.TrimSpace(req.Name) == "" {
+		return &ValidationError{
+			Field: "name",
+			Msg:   "must not be empty",
+		}
+	}
+	if strings.TrimSpace(req.Email) == "" {
+		return &ValidationError{
+			Field: "email",
+			Msg:   "must not be empty",
+		}
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return &ValidationError{
+			Field: "password",
+			Msg:   "must not be empty",
+		}
+	}
+	return nil
+}

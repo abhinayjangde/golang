@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -33,6 +34,15 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Validate the request
+
+	if err := req.Validate(); err != nil {
+		var verr *ValidationError
+		if ok := errors.As(err, &verr); ok {
+			uh.logger.ErrorContext(ctx, "Validation error", "request_id", requestId, "err", err)
+			httpx.Error(w, http.StatusBadRequest, verr.Error(), httpx.CodeValidationFailed)
+			return
+		}
+	}
 	// TODO: Check if the email already exists
 	// TODO: Hash the password
 	row := uh.db.QueryRowContext(ctx, `
