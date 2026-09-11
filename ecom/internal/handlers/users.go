@@ -33,8 +33,7 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Validate the request
-
+	// Validate the request
 	if err := req.Validate(); err != nil {
 		var verr *ValidationError
 		if ok := errors.As(err, &verr); ok {
@@ -43,8 +42,27 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// TODO: Check if the email already exists
-	// TODO: Hash the password
+	// Check if the email already exists
+	var exists bool
+
+	existingUser := uh.db.QueryRowContext(
+		ctx, `SELECT EXISTS (SELECT 1 FROM users WHERE email = $1)`, req.Email)
+
+	err := existingUser.Scan(&exists)
+
+	if err != nil {
+
+		uh.logger.ErrorContext(ctx, "Failed to check existing user", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	if exists {
+		httpx.Error(w, http.StatusConflict, "user already exists with this email", httpx.CodeConflict)
+		return
+	}
+
+	// Hash the password
 	row := uh.db.QueryRowContext(ctx, `
 	INSERT INTO users (name, email, password_hash)
 	VALUES ($1, $2, $3) RETURNING id, email`, req.Name, req.Email, req.Password)
