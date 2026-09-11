@@ -9,6 +9,7 @@ import (
 
 	"github.com/abhinayjangde/ecom/internal/httpx"
 	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
+	"github.com/abhinayjangde/ecom/internal/utils"
 )
 
 type UserHandler struct {
@@ -62,10 +63,19 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hash the password
+	// hash the password
+	hashedPassword, err := utils.HashPassword(req.Password)
+
+	if err != nil {
+		uh.logger.ErrorContext(ctx, "Failed to hash password", "request_id", requestId, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	// creating the user in the database
 	row := uh.db.QueryRowContext(ctx, `
 	INSERT INTO users (name, email, password_hash)
-	VALUES ($1, $2, $3) RETURNING id, email`, req.Name, req.Email, req.Password)
+	VALUES ($1, $2, $3) RETURNING id, email`, req.Name, req.Email, hashedPassword)
 
 	var out CreateUserResponse
 	if err := row.Scan(&out.ID, &out.Email); err != nil {
