@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/abhinayjangde/ecom/internal/config"
@@ -51,7 +55,6 @@ func main() {
 
 	logger.Info("redis ready")
 	logger.Info("postgres database connected")
-	logger.Info("starting server", "port", cfg.Port)
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 	uh := handlers.NewUserHandler(db, logger)           // user handler
@@ -73,8 +76,27 @@ func main() {
 		WriteTimeout: time.Second * 30,
 		IdleTimeout:  time.Second * 60,
 	}
-	if err := srv.ListenAndServe(); err != nil {
-		logger.Error("server stopped", "err", err)
-		os.Exit(1)
+
+	// this keeps main thread alive and allows the server to run in the background
+	go func() {
+		logger.Info("starting server", "port", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("Server forced to close: ", err.Error(), "\n")
+		}
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-shutdown
+	logger.Error("Received signal: ", sig.String(), ". Initiating graceful shutdown...\n")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Graceful shutdown failed:", err.Error(), "\n")
 	}
+
+	logger.Info("Server exited cleanly.")
 }
