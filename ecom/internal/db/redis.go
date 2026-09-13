@@ -8,9 +8,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRedisClient(redistUrl string) (*redis.Client, error) {
+func NewRedisClient(redistURL string) (*redis.Client, error) {
 
-	opt, err := redis.ParseURL(redistUrl)
+	opt, err := redis.ParseURL(redistURL)
 	if err != nil {
 		return nil, fmt.Errorf("redis: %w", err)
 	}

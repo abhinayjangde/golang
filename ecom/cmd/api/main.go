@@ -27,14 +27,14 @@ func main() {
 	defer closer.Close()
 	slog.SetDefault(logger)
 
-	redis, err := db.NewRedisClient(cfg.RedisUrl)
+	redis, err := db.NewRedisClient(cfg.RedisURL)
 	if err != nil {
 		logger.Error("redis initialization failed", "err", err)
 		os.Exit(1)
 	}
 	defer redis.Close()
 
-	db, err := db.Connect(cfg.DatabaseUrl)
+	db, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
 		logger.Error("database connection failed", "err", err)
 		os.Exit(1)

@@ -9,8 +9,8 @@ import (
 type Config struct {
 	Port        string `env:"PORT" envDefault:"8000"`
 	Env         string `env:"ENV" envDefault:"local"`
-	DatabaseUrl string `env:"DATABASE_URL"`
-	RedisUrl    string `env:"REDIS_URL"`
+	DatabaseURL string `env:"DATABASE_URL"`
+	RedisURL    string `env:"REDIS_URL"`
 	LogFile     string `env:"LOG_FILE" envDefault:"app.log"`
 }
 
@@ -42,8 +42,8 @@ func MustLoad() Config {
 	return Config{
 		Port:        port,
 		Env:         env,
-		DatabaseUrl: databaseUrl,
-		RedisUrl:    redisUrl,
+		DatabaseURL: databaseUrl,
+		RedisURL:    redisUrl,
 		LogFile:     logFile,
 	}
 }

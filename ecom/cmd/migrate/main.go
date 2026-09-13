@@ -17,7 +17,7 @@ func main() {
 	}
 	cfg := config.MustLoad()
 
-	m, err := migrate.New("file://migrations", cfg.DatabaseUrl)
+	m, err := migrate.New("file://migrations", cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("migrate.new: %v", err)
 	}

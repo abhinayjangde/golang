@@ -9,9 +9,9 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func Connect(databaseUrl string) (*sql.DB, error) {
+func Connect(databaseURL string) (*sql.DB, error) {
 
-	db, err := sql.Open("pgx", databaseUrl)
+	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("sql.open: %w", err)
 	}
