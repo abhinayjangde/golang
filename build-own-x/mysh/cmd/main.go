@@ -28,7 +28,7 @@ func main() {
 		} else if strings.HasPrefix(command, "type ") {
 			command = command[5:]
 			if slices.Contains(builtins, command) {
-				fmt.Println(command + ": is a shell builtin")
+				fmt.Println(command + " is a shell builtin")
 			} else {
 				fmt.Println(command + ": not found")
 			}
