@@ -7,15 +7,13 @@ import (
 )
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("Enter your name:")
-
-	if scanner.Scan() {
-		input := scanner.Text()
-		fmt.Printf("You entered: %s\n", input)
+	fmt.Print("$ ")
+	command, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading input:", err)
+		os.Exit(1)
 	}
 
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading standard input: ", err)
-	}
+	fmt.Println(command[:len(command)-2], ": command not found")
+
 }
