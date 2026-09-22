@@ -120,7 +120,7 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			uh.logger.ErrorContext(ctx, "User not found", "request_id", requestID, "email", req.Email)
-			httpx.Error(w, http.StatusNotFound, "user not found", httpx.CodeNotFound)
+			httpx.Error(w, http.StatusUnauthorized, "invalid credentials", httpx.CodeUnauthenticated)
 			return
 		}
 		uh.logger.ErrorContext(ctx, "Failed to query user", "request_id", requestID, "email", req.Email, "err", err)
