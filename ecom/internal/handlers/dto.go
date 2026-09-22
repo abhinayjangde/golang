@@ -84,3 +84,19 @@ type LoginUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+func (req LoginUserRequest) Validate() error {
+	if strings.TrimSpace(req.Email) == "" {
+		return &ValidationError{
+			Field: "email",
+			Msg:   "must not be empty",
+		}
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return &ValidationError{
+			Field: "password",
+			Msg:   "must not be empty",
+		}
+	}
+	return nil
+}

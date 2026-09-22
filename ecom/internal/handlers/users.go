@@ -91,11 +91,48 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestID := middleware.RequestIDFromContext(ctx)
 
+	// reading request body
 	var req LoginUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		uh.logger.ErrorContext(ctx, "Failed to decode request body", "request_id", requestID, "err", err)
 		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJSON)
 		return
 	}
+
+	// validating req data
+	if err := req.Validate(); err != nil {
+		var verr *ValidationError
+		if ok := errors.As(err, &verr); ok {
+			uh.logger.ErrorContext(ctx, "Validation error", "request_id", requestID, "err", err)
+			httpx.Error(w, http.StatusBadRequest, verr.Error(), httpx.CodeValidationFailed)
+			return
+		}
+	}
+
+	// Check if the user exists
+	var userID, passwordHash string
+	row := uh.db.QueryRowContext(ctx, `SELECT id, password_hash FROM users WHERE email = $1`, req.Email)
+
+	err := row.Scan(&userID, &passwordHash)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			uh.logger.ErrorContext(ctx, "User not found", "request_id", requestID, "email", req.Email)
+			httpx.Error(w, http.StatusNotFound, "user not found", httpx.CodeNotFound)
+			return
+		}
+		uh.logger.ErrorContext(ctx, "Failed to query user", "request_id", requestID, "email", req.Email, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	// Verify the password
+	if !utils.CheckPasswordHash(req.Password, passwordHash) {
+		uh.logger.ErrorContext(ctx, "Invalid password", "request_id", requestID, "email", req.Email)
+		httpx.Error(w, http.StatusUnauthorized, "invalid credentials", httpx.CodeUnauthenticated)
+		return
+	}
+
+	// TODO: If the password is correct, you can generate a token or session here (not implemented in this snippet)
+
 	httpx.WriteJSON(w, http.StatusOK, req)
 }
