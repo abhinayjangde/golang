@@ -22,21 +22,21 @@ const (
 	cacheTTL         = 20 * time.Second
 )
 
-type ListingHanlder struct {
+type ListingHandler struct {
 	db     *sql.DB
 	redis  *redis.Client
 	logger *slog.Logger
 }
 
-func NewListingHandler(db *sql.DB, redis *redis.Client, logger *slog.Logger) *ListingHanlder {
-	return &ListingHanlder{
+func NewListingHandler(db *sql.DB, redis *redis.Client, logger *slog.Logger) *ListingHandler {
+	return &ListingHandler{
 		db:     db,
 		redis:  redis,
 		logger: logger,
 	}
 }
 
-func (lh ListingHanlder) invalidateListingsCache(ctx context.Context) error {
+func (lh ListingHandler) invalidateListingsCache(ctx context.Context) error {
 	return lh.redis.Del(ctx, listingsCacheKey).Err()
 }
 
@@ -67,7 +67,7 @@ func writeListingsResponse(w http.ResponseWriter, r *http.Request, listings []mo
 	return nil
 }
 
-func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
+func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	requestId := middleware.RequestIDFromContext(ctx)
 
@@ -190,7 +190,7 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
+func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
 	requestID := middleware.RequestIDFromContext(ctx)
@@ -252,7 +252,7 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusNoContent, nil)
 }
 
-func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
+func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	requestId := middleware.RequestIDFromContext(ctx)
