@@ -13,6 +13,7 @@ import (
 	"github.com/abhinayjangde/ecom/internal/config"
 	"github.com/abhinayjangde/ecom/internal/db"
 	"github.com/abhinayjangde/ecom/internal/handlers"
+	"github.com/abhinayjangde/ecom/internal/lib"
 	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
 	"github.com/abhinayjangde/ecom/internal/utils"
 	"github.com/rs/cors"
@@ -43,6 +44,13 @@ func main() {
 		logger.Error("database connection failed", "err", err)
 		os.Exit(1)
 	}
+
+	s3Client, err := lib.NewS3Client(cfg.AWSRegion, cfg.S3Bucket)
+	if err != nil {
+		logger.Error("s3 client initialization failed", "err", err)
+		os.Exit(1)
+	}
+
 	mux := http.NewServeMux()
 	// wrappedMux := middleware.CorsMiddleware(mux) // for fixing cors policy
 	c := cors.New(cors.Options{
@@ -59,6 +67,7 @@ func main() {
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 	uh := handlers.NewUserHandler(db, logger, cfg)      // user handler
 	ch := handlers.NewCategoryHandler(db, logger)       // category handler
+	ih := handlers.NewImageHandler(db, s3Client, cfg, logger)
 
 	wrappedMux := middleware.RequestId(c.Handler(mux))
 
@@ -82,6 +91,10 @@ func main() {
 		middleware.RequireAdmin(http.HandlerFunc(ch.Delete)),
 		cfg.JWTSecret).ServeHTTP,
 	)
+
+	mux.HandleFunc("POST /listings/{id}/images", middleware.AuthMiddleware(http.HandlerFunc(ih.Create), cfg.JWTSecret).ServeHTTP)
+	mux.HandleFunc("POST /images/{id}/confirm", middleware.AuthMiddleware(http.HandlerFunc(ih.Confirm), cfg.JWTSecret).ServeHTTP)
+	mux.HandleFunc("DELETE /images/{id}", middleware.AuthMiddleware(http.HandlerFunc(ih.Delete), cfg.JWTSecret).ServeHTTP)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
