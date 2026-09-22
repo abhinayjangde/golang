@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -14,8 +15,10 @@ type Config struct {
 	RedisURL    string `env:"REDIS_URL,required"`
 	LogFile     string `env:"LOG_FILE" envDefault:"./logs/app.jsonl"`
 	JWTSecret   string `env:"JWT_SECRET,required"`
-	AwsRegion   string `env:"AWS_REGION,required"`
-	S3Bucket    string `env:"S3_BUCKET,required"`
+
+	AWSRegion    string        `env:"AWS_REGION" envDefault:"ap-south-1"`
+	S3Bucket     string        `env:"S3_BUCKET,required"`
+	PresignedTTL time.Duration `env:"S3_PRESIGNED_TTL" envDefault:"5m"`
 }
 
 func MustLoad() Config {
