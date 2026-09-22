@@ -57,7 +57,7 @@ func main() {
 	logger.Info("postgres database connected")
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
-	uh := handlers.NewUserHandler(db, logger)           // user handler
+	uh := handlers.NewUserHandler(db, logger, cfg)      // user handler
 
 	wrappedMux := middleware.RequestId(c.Handler(mux))
 

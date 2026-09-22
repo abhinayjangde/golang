@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/abhinayjangde/ecom/internal/config"
 	"github.com/abhinayjangde/ecom/internal/httpx"
 	middleware "github.com/abhinayjangde/ecom/internal/middlewares"
 	"github.com/abhinayjangde/ecom/internal/utils"
@@ -15,12 +16,14 @@ import (
 type UserHandler struct {
 	db     *sql.DB
 	logger *slog.Logger
+	cfg    config.Config
 }
 
-func NewUserHandler(db *sql.DB, logger *slog.Logger) *UserHandler {
+func NewUserHandler(db *sql.DB, logger *slog.Logger, cfg config.Config) *UserHandler {
 	return &UserHandler{
 		db:     db,
 		logger: logger,
+		cfg:    cfg,
 	}
 }
 
@@ -133,6 +136,33 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: If the password is correct, you can generate a token or session here (not implemented in this snippet)
+	accessToken, err := utils.GenerateAccessToken(
+		userID,
+		req.Email,
+		uh.cfg.JWTSecret,
+	)
 
-	httpx.WriteJSON(w, http.StatusOK, req)
+	if err != nil {
+		uh.logger.ErrorContext(ctx, "error while generating access token", "request_id", requestID, "email", req.Email)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken()
+	if err != nil {
+		uh.logger.ErrorContext(ctx, "error while generating refresh token", "request_id", requestID, "email", req.Email)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	var out LoginUserResponse
+
+	out = LoginUserResponse{
+		Message:      "User loggged in successfully",
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	uh.logger.InfoContext(ctx, "User logged in successfully", "request_id", requestID, "user_id", userID)
+	httpx.WriteJSON(w, http.StatusOK, out)
 }

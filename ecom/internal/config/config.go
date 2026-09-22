@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL string `env:"DATABASE_URL,required"`
 	RedisURL    string `env:"REDIS_URL,required"`
 	LogFile     string `env:"LOG_FILE" envDefault:"./logs/app.jsonl"`
+	JWTSecret   string `env:"JWT_SECRET,required"`
 }
 
 func MustLoad() Config {

@@ -100,3 +100,9 @@ func (req LoginUserRequest) Validate() error {
 	}
 	return nil
 }
+
+type LoginUserResponse struct {
+	Message      string `json:"message"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
