@@ -9,7 +9,7 @@ services:
       - .env
     environment:
       LOG_FILE: /var/log/olxapi/api.jsonl
-      DATABASE_URL: postgresql://abhi:password@postgres:5432/olxapi?search_path=public&sslmode=disable
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?search_path=public&sslmode=disable
       REDIS_URL: redis://redis:6379
     volumes:
       - api_logs:/var/log/olxapi
@@ -32,7 +32,7 @@ services:
       - postgres_data:/var/lib/postgresql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U abhi -d olxapi"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
