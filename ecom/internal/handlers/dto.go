@@ -106,3 +106,9 @@ type LoginUserResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+// profile DTOs
+type GetProfileResponse struct {
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+}

@@ -166,3 +166,19 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	uh.logger.InfoContext(ctx, "User logged in successfully", "request_id", requestID, "user_id", userID)
 	httpx.WriteJSON(w, http.StatusOK, out)
 }
+
+func (uh UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	requestID := middleware.RequestIDFromContext(ctx)
+
+	userID := middleware.UserIDFromContext(ctx)
+	email := middleware.EmailFromContext(ctx)
+
+	out := GetProfileResponse{
+		UserID: userID,
+		Email:  email,
+	}
+
+	uh.logger.InfoContext(ctx, "User profile retrieved successfully", "request_id", requestID, "user_id", userID)
+	httpx.WriteJSON(w, http.StatusOK, out)
+}

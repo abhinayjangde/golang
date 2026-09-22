@@ -69,6 +69,7 @@ func main() {
 
 	mux.HandleFunc("POST /auth/register", uh.Create)
 	mux.HandleFunc("POST /auth/login", uh.Login)
+	mux.HandleFunc("GET /auth/profile", middleware.AuthMiddleware(http.HandlerFunc(uh.GetProfile), cfg.JWTSecret).ServeHTTP)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
