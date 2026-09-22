@@ -249,7 +249,7 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		"request_id", requestID,
 	)
 
-	httpx.WriteJSON(w, http.StatusNoContent, nil)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (lh ListingHandler) Create(w http.ResponseWriter, r *http.Request) {
