@@ -254,7 +254,7 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 		req.Price,
 		req.City,
 		userID,
-		"8e1e0a65-56ca-4de2-99a9-66d805f92923", // TODO: for now, we are using userID as category_id, but in future we will change this to category_id
+		req.CategoryID,
 	)
 
 	var out CreateListingResponse

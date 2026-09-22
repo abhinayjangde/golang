@@ -12,6 +12,7 @@ type CreateListingRequest struct {
 	Description string `json:"description"`
 	Price       int64  `json:"price"`
 	City        string `json:"city"`
+	CategoryID  string `json:"category_id"`
 }
 
 type ValidationError struct {
