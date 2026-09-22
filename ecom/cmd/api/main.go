@@ -58,6 +58,7 @@ func main() {
 
 	lh := handlers.NewListingHandler(db, redis, logger) // listing handler
 	uh := handlers.NewUserHandler(db, logger, cfg)      // user handler
+	ch := handlers.NewCategoryHandler(db, logger)       // category handler
 
 	wrappedMux := middleware.RequestId(c.Handler(mux))
 
@@ -71,6 +72,8 @@ func main() {
 	mux.HandleFunc("POST /auth/register", uh.Create)
 	mux.HandleFunc("POST /auth/login", uh.Login)
 	mux.HandleFunc("GET /auth/profile", middleware.AuthMiddleware(http.HandlerFunc(uh.GetProfile), cfg.JWTSecret).ServeHTTP)
+
+	mux.HandleFunc("POST /categories", middleware.AuthMiddleware(http.HandlerFunc(ch.Create), cfg.JWTSecret).ServeHTTP)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,

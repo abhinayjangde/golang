@@ -113,3 +113,18 @@ type GetProfileResponse struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
 }
+
+// category DTOs
+type CreateCategoryRequest struct {
+	Name string `json:"name"`
+}
+
+func (req CreateCategoryRequest) Validate() error {
+	if strings.TrimSpace(req.Name) == "" {
+		return &ValidationError{
+			Field: "name",
+			Msg:   "must not be empty",
+		}
+	}
+	return nil
+}
