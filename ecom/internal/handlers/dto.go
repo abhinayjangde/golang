@@ -79,3 +79,8 @@ func (req CreateUserRequest) Validate() error {
 	}
 	return nil
 }
+
+type LoginUserRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}

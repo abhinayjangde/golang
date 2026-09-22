@@ -26,10 +26,10 @@ func NewUserHandler(db *sql.DB, logger *slog.Logger) *UserHandler {
 
 func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	requestId := middleware.RequestIDFromContext(ctx)
+	requestID := middleware.RequestIDFromContext(ctx)
 	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		uh.logger.ErrorContext(ctx, "Failed to decode request body", "request_id", requestId, "err", err)
+		uh.logger.ErrorContext(ctx, "Failed to decode request body", "request_id", requestID, "err", err)
 		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJSON)
 		return
 	}
@@ -38,7 +38,7 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := req.Validate(); err != nil {
 		var verr *ValidationError
 		if ok := errors.As(err, &verr); ok {
-			uh.logger.ErrorContext(ctx, "Validation error", "request_id", requestId, "err", err)
+			uh.logger.ErrorContext(ctx, "Validation error", "request_id", requestID, "err", err)
 			httpx.Error(w, http.StatusBadRequest, verr.Error(), httpx.CodeValidationFailed)
 			return
 		}
@@ -52,7 +52,7 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := existingUser.Scan(&exists)
 
 	if err != nil {
-		uh.logger.ErrorContext(ctx, "Failed to check existing user", "request_id", requestId, "err", err)
+		uh.logger.ErrorContext(ctx, "Failed to check existing user", "request_id", requestID, "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
 	}
@@ -66,7 +66,7 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := utils.HashPassword(req.Password)
 
 	if err != nil {
-		uh.logger.ErrorContext(ctx, "Failed to hash password", "request_id", requestId, "err", err)
+		uh.logger.ErrorContext(ctx, "Failed to hash password", "request_id", requestID, "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
 	}
@@ -78,15 +78,24 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var out CreateUserResponse
 	if err := row.Scan(&out.ID, &out.Email); err != nil {
-		uh.logger.ErrorContext(ctx, "Failed to insert user", "request_id", requestId, "err", err)
+		uh.logger.ErrorContext(ctx, "Failed to insert user", "request_id", requestID, "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
 	}
 
-	uh.logger.InfoContext(ctx, "User created successfully", "request_id", requestId, "user_id", out.ID)
+	uh.logger.InfoContext(ctx, "User created successfully", "request_id", requestID, "user_id", out.ID)
 	httpx.WriteJSON(w, http.StatusCreated, out)
 }
 
 func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteJSON(w, http.StatusOK, "ok")
+	ctx := r.Context()
+	requestID := middleware.RequestIDFromContext(ctx)
+
+	var req LoginUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		uh.logger.ErrorContext(ctx, "Failed to decode request body", "request_id", requestID, "err", err)
+		httpx.Error(w, http.StatusBadRequest, "invalid body", httpx.CodeMalformedJSON)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, req)
 }
