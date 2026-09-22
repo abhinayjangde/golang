@@ -77,6 +77,7 @@ func main() {
 		middleware.RequireAdmin(http.HandlerFunc(ch.Create)),
 		cfg.JWTSecret).ServeHTTP,
 	)
+	mux.HandleFunc("GET /categories", ch.List)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
