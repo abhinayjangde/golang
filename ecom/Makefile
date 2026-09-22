@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: build run worker
 
 build:
 	@go build -o bin/api ./cmd/api
@@ -11,3 +11,6 @@ migrate-up:
 
 migrate-down:
 	@go run ./cmd/migrate down
+
+worker:
+	@go run ./cmd/worker
