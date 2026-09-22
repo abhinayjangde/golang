@@ -47,23 +47,23 @@ func AuthMiddleware(next http.Handler, secret string) http.Handler {
 
 		// store data in context for further use in the request lifecycle
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "user_id", userID)
-		ctx = context.WithValue(ctx, "email", email)
-		ctx = context.WithValue(ctx, "role", role)
+		ctx = context.WithValue(ctx, userIDKey, userID)
+		ctx = context.WithValue(ctx, emailKey, email)
+		ctx = context.WithValue(ctx, roleKey, role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func UserIDFromContext(ctx context.Context) string {
-	return ctx.Value("user_id").(string)
+	return ctx.Value(userIDKey).(string)
 }
 
 func EmailFromContext(ctx context.Context) string {
-	return ctx.Value("email").(string)
+	return ctx.Value(emailKey).(string)
 }
 
 func RoleFromContext(ctx context.Context) string {
-	return ctx.Value("role").(string)
+	return ctx.Value(roleKey).(string)
 }
 
 func RequireAdmin(next http.Handler) http.Handler {

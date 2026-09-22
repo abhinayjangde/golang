@@ -11,6 +11,9 @@ type ctxKey int
 
 const (
 	requestIDKey ctxKey = iota
+	userIDKey
+	emailKey
+	roleKey
 )
 const (
 	requestId = "X-Request-ID"
