@@ -17,10 +17,10 @@ type Config struct {
 }
 
 func MustLoad() Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Warning: .env file not found")
-	}
+	godotenv.Load()
+	// if err != nil {
+	// 	log.Println("Warning: .env file not found")
+	// }
 
 	var cfg Config
 
