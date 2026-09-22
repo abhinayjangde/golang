@@ -193,13 +193,17 @@ func (lh ListingHanlder) List(w http.ResponseWriter, r *http.Request) {
 func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-	requestId := middleware.RequestIDFromContext(ctx)
-	_, err := lh.db.ExecContext(ctx, `DELETE FROM listings WHERE id = $1`, id)
+	requestID := middleware.RequestIDFromContext(ctx)
+	userID := middleware.UserIDFromContext(ctx)
+
+	result, err := lh.db.ExecContext(ctx, `DELETE FROM listings WHERE id = $1 AND user_id = $2`, id, userID)
 	if err != nil {
 		lh.logger.ErrorContext(ctx, "delete error",
 			"operation", "listings.delete",
+			"listing_id", id,
+			"request_id", requestID,
+			"user_id", userID,
 			"err", err,
-			"request_id", requestId,
 		)
 		httpx.Error(w, http.StatusInternalServerError, "error while deleting a listing", httpx.CodeInternalError)
 		return
@@ -216,10 +220,33 @@ func (lh ListingHanlder) Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	*/
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		lh.logger.ErrorContext(ctx, "failed to get rows affected",
+			"operation", "listings.delete",
+			"listing_id", id,
+			"request_id", requestID,
+			"user_id", userID,
+			"err", err,
+		)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
 
+	if rowsAffected == 0 {
+		httpx.Error(
+			w,
+			http.StatusNotFound,
+			"listing not found or you are not its owner",
+			httpx.CodeNotFound,
+		)
+		return
+	}
 	lh.logger.InfoContext(ctx, "listing deleted",
 		"operation", "listings.delete",
 		"listing_id", id,
+		"user_id", userID,
+		"request_id", requestID,
 	)
 
 	httpx.WriteJSON(w, http.StatusNoContent, nil)

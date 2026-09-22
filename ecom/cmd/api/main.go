@@ -66,7 +66,7 @@ func main() {
 
 	mux.HandleFunc("GET /listings", lh.List)
 	mux.HandleFunc("POST /listings", middleware.AuthMiddleware(http.HandlerFunc(lh.Create), cfg.JWTSecret).ServeHTTP)
-	mux.HandleFunc("DELETE /listings/{id}", lh.Delete)
+	mux.HandleFunc("DELETE /listings/{id}", middleware.AuthMiddleware(http.HandlerFunc(lh.Delete), cfg.JWTSecret).ServeHTTP)
 
 	mux.HandleFunc("POST /auth/register", uh.Create)
 	mux.HandleFunc("POST /auth/login", uh.Login)
