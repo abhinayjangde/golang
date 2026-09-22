@@ -104,3 +104,27 @@ func (ch *CategoryHandler) List(w http.ResponseWriter, r *http.Request) {
 	ch.logger.InfoContext(ctx, "categories fetched", "request_id", requestID, "count", len(categories))
 	httpx.WriteJSON(w, http.StatusOK, categories)
 }
+
+func (ch *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := r.PathValue("id")
+	requestID := middleware.RequestIDFromContext(ctx)
+	userID := middleware.UserIDFromContext(ctx)
+	if id == "" {
+		ch.logger.ErrorContext(ctx, "Missing category ID", "request_id", requestID, "user_id", userID)
+		httpx.Error(w, http.StatusBadRequest, "missing category ID", httpx.CodeInvalidID)
+		return
+	}
+
+	// Delete the category
+	_, err := ch.db.ExecContext(ctx, "DELETE FROM categories WHERE id = $1", id)
+	if err != nil {
+		ch.logger.ErrorContext(ctx, "Failed to delete category", "request_id", requestID, "category_id", id, "user_id", userID, "err", err)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+
+	ch.logger.InfoContext(ctx, "category deleted", "request_id", requestID, "category_id", id, "user_id", userID)
+	w.WriteHeader(http.StatusNoContent)
+
+}

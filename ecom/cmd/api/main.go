@@ -78,6 +78,10 @@ func main() {
 		cfg.JWTSecret).ServeHTTP,
 	)
 	mux.HandleFunc("GET /categories", ch.List)
+	mux.HandleFunc("DELETE /categories/{id}", middleware.AuthMiddleware(
+		middleware.RequireAdmin(http.HandlerFunc(ch.Delete)),
+		cfg.JWTSecret).ServeHTTP,
+	)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
