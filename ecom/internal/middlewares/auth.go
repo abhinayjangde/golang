@@ -43,11 +43,13 @@ func AuthMiddleware(next http.Handler, secret string) http.Handler {
 		claims, _ := token.Claims.(jwt.MapClaims)
 		userID := claims["user_id"].(string)
 		email := claims["email"].(string)
+		role := claims["role"].(string)
 
 		// store data in context for further use in the request lifecycle
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "user_id", userID)
 		ctx = context.WithValue(ctx, "email", email)
+		ctx = context.WithValue(ctx, "role", role)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -58,4 +60,25 @@ func UserIDFromContext(ctx context.Context) string {
 
 func EmailFromContext(ctx context.Context) string {
 	return ctx.Value("email").(string)
+}
+
+func RoleFromContext(ctx context.Context) string {
+	return ctx.Value("role").(string)
+}
+
+func RequireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if RoleFromContext(ctx) != "admin" {
+			httpx.Error(
+				w,
+				http.StatusForbidden,
+				"admin access required",
+				httpx.CodeForbidden,
+			)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

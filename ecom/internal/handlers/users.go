@@ -113,10 +113,10 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user exists
-	var userID, passwordHash string
-	row := uh.db.QueryRowContext(ctx, `SELECT id, password_hash FROM users WHERE email = $1`, req.Email)
+	var userID, passwordHash, role string
+	row := uh.db.QueryRowContext(ctx, `SELECT id, password_hash, role FROM users WHERE email = $1`, req.Email)
 
-	err := row.Scan(&userID, &passwordHash)
+	err := row.Scan(&userID, &passwordHash, &role)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			uh.logger.ErrorContext(ctx, "User not found", "request_id", requestID, "email", req.Email)
@@ -135,10 +135,11 @@ func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: If the password is correct, you can generate a token or session here (not implemented in this snippet)
+	// Generate access and refresh tokens
 	accessToken, err := utils.GenerateAccessToken(
 		userID,
 		req.Email,
+		role,
 		uh.cfg.JWTSecret,
 	)
 
