@@ -229,6 +229,7 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	requestId := middleware.RequestIDFromContext(ctx)
+	userID := middleware.UserIDFromContext(ctx)
 
 	var req CreateListingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -246,12 +247,14 @@ func (lh ListingHanlder) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	row := lh.db.QueryRowContext(ctx,
-		`INSERT INTO listings (title, description, price, city)
-			VALUES ($1, $2, $3, $4) RETURNING id, title, created_at`,
+		`INSERT INTO listings (title, description, price, city, user_id, category_id)
+			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, created_at`,
 		req.Title,
 		req.Description,
 		req.Price,
 		req.City,
+		userID,
+		"8e1e0a65-56ca-4de2-99a9-66d805f92923", // TODO: for now, we are using userID as category_id, but in future we will change this to category_id
 	)
 
 	var out CreateListingResponse

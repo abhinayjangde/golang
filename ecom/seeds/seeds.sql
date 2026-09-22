@@ -5,3 +5,11 @@ INSERT INTO listings (title, description, price, city) VALUES
 ('Beachfront Villa', 'A luxurious villa with ocean views.', 350, 'Mumbai'),
 ('Mountain Cabin', 'A rustic cabin in the mountains.', 150, 'Delhi'),
 ('Downtown Loft', 'A stylish loft in the heart of downtown.', 250, 'Chennai');
+
+
+INSERT INTO categories (name) VALUES
+('Electronics'),
+('Furniture'),
+('Clothing'),
+('Books'),
+('Toys');
