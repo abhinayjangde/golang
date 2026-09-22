@@ -67,7 +67,8 @@ func main() {
 	mux.HandleFunc("POST /listings", lh.Create)
 	mux.HandleFunc("DELETE /listings/{id}", lh.Delete)
 
-	mux.HandleFunc("POST /users", uh.Create)
+	mux.HandleFunc("POST /auth/register", uh.Create)
+	mux.HandleFunc("POST /auth/login", uh.Login)
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,

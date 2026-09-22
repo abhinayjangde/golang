@@ -52,7 +52,6 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := existingUser.Scan(&exists)
 
 	if err != nil {
-
 		uh.logger.ErrorContext(ctx, "Failed to check existing user", "request_id", requestId, "err", err)
 		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
 		return
@@ -86,4 +85,8 @@ func (uh UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	uh.logger.InfoContext(ctx, "User created successfully", "request_id", requestId, "user_id", out.ID)
 	httpx.WriteJSON(w, http.StatusCreated, out)
+}
+
+func (uh UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, "ok")
 }
