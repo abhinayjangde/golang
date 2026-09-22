@@ -128,3 +128,47 @@ func (req CreateCategoryRequest) Validate() error {
 	}
 	return nil
 }
+
+// image DTOs
+var allowedImageTypes = map[string]string{
+	"image/jpeg": ".jpg",
+	"image/png":  ".png",
+	"image/webp": ".webp",
+}
+
+type CreateImageRequest struct {
+	ContentType string `json:"content_type"`
+}
+
+func (req CreateImageRequest) Validate() error {
+	if strings.TrimSpace(req.ContentType) == "" {
+		return &ValidationError{
+			Field: "content_type",
+			Msg:   "must not be empty",
+		}
+	}
+	if allowedImageTypes[req.ContentType] == "" {
+		return &ValidationError{
+			Field: "content_type",
+			Msg:   "must be one of: image/jpeg, image/png, image/webp",
+		}
+	}
+	return nil
+}
+
+type CreateImageResponse struct {
+	ID        string `json:"id"`
+	Status    string `json:"status"`
+	ObjectKey string `json:"object_key"`
+	UploadURL string `json:"upload_url"`
+	ExpiresIn int64  `json:"expires_in"`
+}
+
+type ImageResponse struct {
+	ID          string `json:"id"`
+	Status      string `json:"status"`
+	URL         string `json:"url"`
+	ContentType string `json:"content_type,omitempty"`
+	Width       int    `json:"width,omitempty"`
+	Height      int    `json:"height,omitempty"`
+}
