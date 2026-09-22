@@ -7,7 +7,8 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o main ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o worker ./cmd/worker
 
 FROM alpine:3.24.1
 
@@ -16,11 +17,12 @@ RUN adduser -D -g '' gouser
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/worker .
 
-RUN mkdir -p /var/log/olxapi && chown -R gouser:gouser /var/log/olxapi
+RUN mkdir -p /var/log/ecom && chown -R gouser:gouser /var/log/ecom
 
 USER gouser
 
 EXPOSE 8080
 
-CMD ["./main"]
+CMD ["./api"]
