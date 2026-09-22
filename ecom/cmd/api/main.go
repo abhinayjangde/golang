@@ -91,7 +91,7 @@ func main() {
 	go func() {
 		logger.Info("starting server", "port", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("Server forced to close: ", err.Error(), "\n")
+			logger.Error("Server forced to close: ", "err", err)
 		}
 	}()
 
@@ -105,7 +105,7 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("Graceful shutdown failed:", err.Error(), "\n")
+		logger.Error("Graceful shutdown failed:", "err", err)
 	}
 
 	logger.Info("Server exited cleanly.")
