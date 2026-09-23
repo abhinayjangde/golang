@@ -26,13 +26,20 @@ func NewImageHandler(db *sql.DB, s3c *lib.S3Client, cfg config.Config, logger *s
 	return &ImageHandler{db: db, s3: s3c, cfg: cfg, logger: logger}
 }
 
-// listIsOwnedBy helper (used by Create)
-func (ih ImageHandler) listIsOwnedBy(ctx context.Context, listingID, userID string) bool {
+// listIsOwnedBy reports whether the listing exists AND belongs to userID.
+// false, nil = listing not found / not the owner; false, err = real DB error.
+func (ih ImageHandler) listIsOwnedBy(ctx context.Context, listingID, userID string) (bool, error) {
 	var one int
 	err := ih.db.QueryRowContext(ctx,
 		`SELECT 1 FROM listings WHERE id = $1 AND user_id = $2`, listingID, userID,
 	).Scan(&one)
-	return err == nil
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (ih ImageHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +63,15 @@ func (ih ImageHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !ih.listIsOwnedBy(ctx, listingID, userID) {
+	owned, err := ih.listIsOwnedBy(ctx, listingID, userID)
+	if err != nil {
+		ih.logger.ErrorContext(ctx, "ownership check failed",
+			"request_id", requestID, "listing_id", listingID, "user_id", userID, "err", err,
+		)
+		httpx.Error(w, http.StatusInternalServerError, "something went wrong", httpx.CodeInternalError)
+		return
+	}
+	if !owned {
 		httpx.Error(w, http.StatusNotFound, "listing not found or you are not its owner", httpx.CodeNotFound)
 		return
 	}
@@ -65,7 +80,7 @@ func (ih ImageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	objectKey := ih.s3.ObjectKey(listingID, filename)
 
 	var imageID string
-	err := ih.db.QueryRowContext(ctx,
+	err = ih.db.QueryRowContext(ctx,
 		`INSERT INTO images (listing_id, object_key, mime, status)
 		 VALUES ($1, $2, $3, 'pending') RETURNING id`,
 		listingID, objectKey, req.ContentType,

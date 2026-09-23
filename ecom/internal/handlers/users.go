@@ -174,10 +174,12 @@ func (uh UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	userID := middleware.UserIDFromContext(ctx)
 	email := middleware.EmailFromContext(ctx)
+	role := middleware.RoleFromContext(ctx)
 
 	out := GetProfileResponse{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 	}
 
 	uh.logger.InfoContext(ctx, "User profile retrieved successfully", "request_id", requestID, "user_id", userID)
