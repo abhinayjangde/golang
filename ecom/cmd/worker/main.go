@@ -85,8 +85,7 @@ func main() {
 			continue
 		}
 
-		logger.Info("processing job",
-			"job_id", job.ID, "image_id", job.ImageID, "attempt", job.Attempts)
+		logger.Info("processing job", "job_id", job.ID, "image_id", job.ImageID, "attempt", job.Attempts)
 
 		if err := processImage(ctx, s3c, database, job, cfg); err != nil {
 			logger.Error("image processing failed", "job_id", job.ID, "err", err)

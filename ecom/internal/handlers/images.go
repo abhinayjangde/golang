@@ -5,10 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/abhinayjangde/ecom/internal/config"
 	"github.com/abhinayjangde/ecom/internal/httpx"
@@ -26,13 +24,6 @@ type ImageHandler struct {
 
 func NewImageHandler(db *sql.DB, s3c *lib.S3Client, cfg config.Config, logger *slog.Logger) *ImageHandler {
 	return &ImageHandler{db: db, s3: s3c, cfg: cfg, logger: logger}
-}
-
-func (ih ImageHandler) publicURL(key string) string {
-	return fmt.Sprintf(
-		"https://%s.s3.%s.amazonaws.com/%s",
-		ih.cfg.S3Bucket, ih.cfg.AWSRegion, strings.TrimPrefix(key, "/"),
-	)
 }
 
 // listIsOwnedBy helper (used by Create)

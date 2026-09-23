@@ -34,10 +34,12 @@ func NewS3Client(region, bucket string) (*S3Client, error) {
 	}, nil
 }
 
+// ObjectKey builds a namespaced key: listings/<listingID>/<filename>.
 func (c *S3Client) ObjectKey(listingID, filename string) string {
 	return fmt.Sprintf("listings/%s/%s", listingID, filename)
 }
 
+// PresignedPutURL returns a time-limited URL the client uploads to directly.
 func (c *S3Client) PresignedPutURL(ctx context.Context, key string, ttl time.Duration) (string, error) {
 	resp, err := c.presign.PresignPutObject(ctx, &awss3.PutObjectInput{
 		Bucket: aws.String(c.bucket),
@@ -49,6 +51,7 @@ func (c *S3Client) PresignedPutURL(ctx context.Context, key string, ttl time.Dur
 	return resp.URL, nil
 }
 
+// GetObject downloads a full object (used by the worker).
 func (c *S3Client) GetObject(ctx context.Context, key string) ([]byte, error) {
 	out, err := c.svc.GetObject(ctx, &awss3.GetObjectInput{
 		Bucket: aws.String(c.bucket),
@@ -66,6 +69,7 @@ func (c *S3Client) GetObject(ctx context.Context, key string) ([]byte, error) {
 	return data, nil
 }
 
+// PutObject uploads bytes (used by the worker for the processed image).
 func (c *S3Client) PutObject(ctx context.Context, key string, data []byte, contentType string) error {
 	_, err := c.svc.PutObject(ctx, &awss3.PutObjectInput{
 		Bucket:      aws.String(c.bucket),
@@ -79,6 +83,7 @@ func (c *S3Client) PutObject(ctx context.Context, key string, data []byte, conte
 	return nil
 }
 
+// DeleteObject removes an object (used when an image is deleted).
 func (c *S3Client) DeleteObject(ctx context.Context, key string) error {
 	_, err := c.svc.DeleteObject(ctx, &awss3.DeleteObjectInput{
 		Bucket: aws.String(c.bucket),
