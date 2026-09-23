@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 )
 
@@ -19,10 +20,9 @@ func main() {
 		}
 
 		command = strings.TrimSpace(command)
-		builtins := map[string]string{
-			"exit":   "exit",
-			"echo":   "echo",
-			"type":   "type",
+
+		builtins := []string{"exit", "echo", "type"}
+		executables := map[string]string{
 			"ls":     "Get-ChildItem",
 			"pwd":    "Get-Location",
 			"cd":     "Set-Location",
@@ -55,7 +55,7 @@ func main() {
 
 		} else if strings.HasPrefix(command, "git") {
 			args := strings.Fields(command)
-			cmd := exec.Command(builtins["git"], args[1:]...)
+			cmd := exec.Command(executables["git"], args[1:]...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Stdin = os.Stdin
@@ -64,7 +64,7 @@ func main() {
 			}
 		} else if strings.HasPrefix(command, "docker") {
 			args := strings.Fields(command)
-			cmd := exec.Command(builtins["docker"], args[1:]...)
+			cmd := exec.Command(executables["docker"], args[1:]...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Stdin = os.Stdin
@@ -81,16 +81,18 @@ func main() {
 
 		} else if strings.HasPrefix(command, "type ") {
 			command = command[5:]
-			if builtins[command] != "" {
 
-				path, err := exec.LookPath(builtins[command])
+			if slices.Contains(builtins, command) {
+				fmt.Println(command + " is a shell builtin")
+			} else if executables[command] != "" {
+				path, err := exec.LookPath(executables[command])
 
 				if err != nil {
 					fmt.Fprintln(os.Stderr, "Error looking up command:", err)
 					os.Exit(1)
 				}
 				fmt.Println(command+" is ", path)
-				// fmt.Printf("fortune is available at %s\n", path)
+
 			} else {
 				fmt.Println(command + ": not found")
 			}
