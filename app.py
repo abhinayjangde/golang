@@ -16,4 +16,8 @@ def outer():
     inner2(f)
     print(f.x)
 
+    g = None
+    inner2(g)
+    print
+
 outer()
